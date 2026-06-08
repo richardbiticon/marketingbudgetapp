@@ -29,4 +29,10 @@ export const settingsInput = z.object({
   testInnovationPct: z.coerce.number().min(0).max(100),
 });
 
+export const commentInput = z.object({
+  entityType: z.string().trim().min(1).max(60),
+  entityId: z.string().trim().min(1).max(120),
+  body: z.string().trim().min(1, "Write something").max(2000),
+});
+
 export type ExpenseInput = z.infer<typeof expenseInput>;

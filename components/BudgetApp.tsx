@@ -8,8 +8,11 @@ import { OverviewCards } from "./OverviewCards";
 import { ChannelChart } from "./ChannelChart";
 import { TargetVsActual } from "./TargetVsActual";
 import { ExpensesTable } from "./ExpensesTable";
+import { Identity } from "./Identity";
+import { ActivityNotes } from "./ActivityNotes";
 import { SectionLabel, Eyebrow } from "./bits";
 import { Input } from "./ui/input";
+import { authedHeaders } from "@/lib/actor";
 import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/constants";
 import type { ExpenseRow, TargetRow, SettingsRow } from "@/lib/rollups";
 import type { ExpenseInput } from "@/lib/validation";
@@ -26,7 +29,9 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
   const [rows, setRows] = React.useState<ExpenseRow[]>(initial.expenses);
   const [targets, setTargets] = React.useState<TargetRow[]>(initial.targets);
   const [settings, setSettings] = React.useState<SettingsRow | null>(initial.settings);
+  const [refresh, setRefresh] = React.useState(0); // bumps the activity/notes panel
   const firstRender = React.useRef(true);
+  const bump = React.useCallback(() => setRefresh((n) => n + 1), []);
 
   const loadAll = React.useCallback(async (p: string) => {
     const [eRes, tRes, sRes] = await Promise.all([
@@ -45,11 +50,13 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
     loadAll(period);
   }, [period, loadAll]);
 
-  // Refetch on window focus so a tab left open catches new rows from teammates.
+  // Live: refetch on focus and on a 12s poll so the team sees each other's
+  // changes without a manual refresh. Ably push replaces the poll later.
   React.useEffect(() => {
     const onFocus = () => loadAll(period);
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    const id = setInterval(() => loadAll(period), 12000);
+    return () => { window.removeEventListener("focus", onFocus); clearInterval(id); };
   }, [period, loadAll]);
 
   async function onAdd(input: ExpenseInput) {
@@ -63,7 +70,7 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
     setRows((r) => [temp, ...r]); // optimistic
     const res = await fetch("/api/expenses", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authedHeaders(),
       body: JSON.stringify(input),
     });
     if (!res.ok) {
@@ -72,6 +79,7 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
     }
     const { expense } = await res.json();
     setRows((r) => r.map((x) => (x.id === temp.id ? expense : x)));
+    bump();
   }
 
   async function onUpdate(id: string, patch: Partial<ExpenseInput>) {
@@ -85,19 +93,20 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
     );
     const res = await fetch(`/api/expenses/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: authedHeaders(),
       body: JSON.stringify(patch),
     });
     if (!res.ok) { setRows(before); return; }
     const { expense } = await res.json();
     setRows((r) => r.map((x) => (x.id === id ? expense : x)));
+    bump();
   }
 
   async function onDelete(id: string) {
     const before = rows;
     setRows((r) => r.filter((x) => x.id !== id));
-    const res = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
-    if (!res.ok) setRows(before);
+    const res = await fetch(`/api/expenses/${id}`, { method: "DELETE", headers: authedHeaders() });
+    if (!res.ok) setRows(before); else bump();
   }
 
   async function onSetTarget(category: Category, value: number) {
@@ -108,7 +117,7 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
     });
     await fetch("/api/targets", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authedHeaders(),
       body: JSON.stringify({ period, category, targetPct: value }),
     });
   }
@@ -132,9 +141,10 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-dim sm:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#57c47b]" /> Live. Postgres
+          <span className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-dim md:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#57c47b]" /> Live
           </span>
+          <Identity />
           <MonthSwitcher period={period} onChange={setPeriod} />
         </div>
       </header>
@@ -187,6 +197,9 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
 
           <SectionLabel>EXPENSES</SectionLabel>
           <ExpensesTable rows={rows} period={period} onAdd={onAdd} onUpdate={onUpdate} onDelete={onDelete} />
+
+          <SectionLabel>TEAM. NOTES AND ACTIVITY</SectionLabel>
+          <ActivityNotes entityType="budget-month" entityId={period} refreshSignal={refresh} />
         </motion.div>
       </AnimatePresence>
     </div>

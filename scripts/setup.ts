@@ -39,6 +39,23 @@ const tables = [
     "category" "category" NOT NULL,
     "target_pct" numeric NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS "comments" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "entity_type" text NOT NULL,
+    "entity_id" text NOT NULL,
+    "author" text NOT NULL,
+    "body" text NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "activity" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "entity_type" text NOT NULL,
+    "entity_id" text NOT NULL,
+    "actor" text NOT NULL,
+    "action" text NOT NULL,
+    "summary" text NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
 ];
 
 async function main() {

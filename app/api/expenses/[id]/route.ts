@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { expenses } from "@/lib/schema";
 import { expensePatch } from "@/lib/validation";
+import { actorFrom, logActivity } from "@/lib/activity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,10 @@ export async function PATCH(
       .returning();
 
     if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    await logActivity({
+      entityType: "budget-month", entityId: row.period, actor: actorFrom(req),
+      action: "updated", summary: `edited ${row.name}`,
+    });
     return NextResponse.json({ expense: row });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -47,7 +52,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -57,6 +62,10 @@ export async function DELETE(
       .where(eq(expenses.id, params.id))
       .returning();
     if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    await logActivity({
+      entityType: "budget-month", entityId: row.period, actor: actorFrom(req),
+      action: "deleted", summary: `deleted ${row.name}`,
+    });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

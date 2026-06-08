@@ -53,7 +53,29 @@ export const settings = pgTable("settings", {
   testInnovationPct: numeric("test_innovation_pct").notNull().default("10"),
 });
 
+// ---- Collaboration substrate (reused by every module via entity_type/id) ----
+export const comments = pgTable("comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  entityType: text("entity_type").notNull(), // e.g. "budget-month", "expense", "email"
+  entityId: text("entity_id").notNull(),
+  author: text("author").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const activity = pgTable("activity", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  entityType: text("entity_type").notNull(),
+  entityId: text("entity_id").notNull(),
+  actor: text("actor").notNull(),
+  action: text("action").notNull(), // created | updated | deleted | commented
+  summary: text("summary").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Expense = typeof expenses.$inferSelect;
 export type NewExpense = typeof expenses.$inferInsert;
 export type Target = typeof targets.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
+export type Comment = typeof comments.$inferSelect;
+export type Activity = typeof activity.$inferSelect;

@@ -3,6 +3,8 @@ import { and, eq, ilike, or, desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { expenses } from "@/lib/schema";
 import { expenseInput } from "@/lib/validation";
+import { actorFrom, logActivity } from "@/lib/activity";
+import { dollars } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,6 +67,10 @@ export async function POST(req: NextRequest) {
         notes: d.notes ?? null,
       })
       .returning();
+    await logActivity({
+      entityType: "budget-month", entityId: row.period, actor: actorFrom(req),
+      action: "created", summary: `added ${row.name} (${dollars(row.amountCents)})`,
+    });
     return NextResponse.json({ expense: row }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
