@@ -32,7 +32,7 @@ async function main() {
     { name: "Attentive SMS", channel: "attentive", category: "retail", amountCents: d(980), vendor: "Attentive", status: "committed", type: "recurring", notes: note },
   ] as const;
 
-  await db.insert(expenses).values(rows as any);
+  await db.insert(expenses).values(rows.map((r) => ({ ...r, period })) as any);
 
   await db.insert(targets).values([
     { period, category: "team", targetPct: "35" },

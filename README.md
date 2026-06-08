@@ -31,9 +31,11 @@ mutations and refetches on window focus.
 
 4. Create the tables and seed the placeholder month:
    ```
-   npm run db:push
+   npm run db:setup
    npm run db:seed
    ```
+   (`db:setup` applies the schema non-interactively. `db:push` via drizzle-kit also
+   works but prompts for confirmation.)
 
 5. Start it:
    ```
