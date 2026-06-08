@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import Image from "next/image";
+import { ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { OverviewCards } from "./OverviewCards";
@@ -117,6 +118,13 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
       {/* header */}
       <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-4">
+          <a
+            href="/"
+            title="Back to Marketing OS"
+            className="flex items-center gap-2 rounded-full border border-line2 bg-white/[0.03] px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-cream-base transition-colors hover:bg-white/[0.08]"
+          >
+            <ChevronLeft className="h-4 w-4" /> OS
+          </a>
           <Image src="/logo.png" alt="All Volleyball" width={44} height={44} className="rounded-lg" priority />
           <div>
             <Eyebrow>/ BUDGET</Eyebrow>

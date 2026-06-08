@@ -1,8 +1,16 @@
-# All Volleyball. Marketing Budget
+# All Volleyball. Marketing OS (moneymakingcrewapp)
 
-Internal marketing budget tool. Every figure persists to Postgres, so a teammate
-adds an expense on one computer and the rest of the team sees it after a refresh.
-Dark, precise, on brand. Built to feel like a luxury car configurator.
+One app for the marketing team. The Marketing OS springboard lives at the root,
+and the Budget tile opens the live, persisted budget tool.
+
+- `/` the Marketing OS (static springboard: Accounts, Rocks, June, Campaigns,
+  Promos, Budget, Automation, Content). Served from `public/index.html`.
+- `/budget` the marketing budget tool. Every figure persists to Postgres, so a
+  teammate adds an expense on one computer and the rest of the team sees it after
+  a refresh. Dark, precise, on brand.
+
+The Budget tile on the OS navigates to `/budget`. The budget tool has a back link
+to the OS.
 
 ## Stack
 Next.js (App Router) + TypeScript, Tailwind, shadcn-style UI on Radix, Framer Motion,

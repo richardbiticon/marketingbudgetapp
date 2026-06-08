@@ -1,4 +1,4 @@
-import { and, eq, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { expenses, targets, settings } from "@/lib/schema";
 import { currentPeriod } from "@/lib/format";
@@ -8,7 +8,7 @@ import type { ExpenseRow, TargetRow, SettingsRow } from "@/lib/rollups";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
+export default async function BudgetPage() {
   const period = currentPeriod();
 
   try {

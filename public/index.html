@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>AV Marketing OS</title>
+<meta name="description" content="All Volleyball internal marketing operations system. Accounts, rocks, June plan, campaigns, promos, budget, automation, content.">
+<link rel="icon" type="image/png" href="logo.png?v=6">
+<link rel="stylesheet" href="styles.css?v=6">
+</head>
+<body>
+
+  <!-- LOGIN GATE -->
+  <div class="login" id="login">
+    <div class="login-card">
+      <div class="login-left">
+        <div class="ll-inner">
+          <div class="ll-eyebrow">/ ALL VOLLEYBALL MARKETING OS</div>
+          <h1>Your marketing.<br><span class="hl">Run as one system.</span></h1>
+          <p>The internal command center to plan, track, and run the quarter. Rocks, accounts, campaigns, budget, automation. One system.</p>
+        </div>
+      </div>
+      <div class="login-right">
+        <div class="lr-emblem" id="lr-emblem">
+          <img src="logo.png?v=6" alt="All Volleyball">
+        </div>
+        <h2>Welcome to <span class="hl">All Volleyball</span></h2>
+        <p class="lr-sub">Internal access only. <strong>Request an invite</strong></p>
+        <form class="lr-form" id="login-form">
+          <label for="login-user">Username or Email</label>
+          <input type="text" id="login-user" placeholder="you@allvolleyball.com" autocomplete="username" spellcheck="false">
+          <button type="submit" class="login-btn">Log in</button>
+          <a class="login-forgot" href="#">Forgot Password</a>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <header class="statusbar">
+    <div class="sb-mark">
+      <img class="sb-logo" src="logo.png?v=6" alt="All Volleyball">
+      <small>MARKETING OS</small>
+    </div>
+    <div class="sb-right">
+      <span class="qtr">Q2</span>
+      <span class="last-sync"><span class="sync-dot"></span>SEED</span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- LEFT DOCK -->
+  <nav class="dock">
+    <button class="dock-home on" id="dock-home" title="Home" aria-label="Home"></button>
+    <span class="dock-spacer"></span>
+    <span class="dock-clock" id="dock-clock">Q2 OPS</span>
+    <span class="dock-tick"></span>
+  </nav>
+
+  <!-- STAGE -->
+  <div class="stage">
+    <section class="springboard" id="springboard"></section>
+    <section class="app-screen" id="app-screen"><div class="app-screen-inner" id="app-inner"></div></section>
+  </div>
+
+  <script src="data.js?v=6"></script>
+  <script src="june.js?v=6"></script>
+  <script src="accounts.js?v=6"></script>
+  <script src="metrics.js?v=6"></script>
+  <script src="scanner.js?v=6"></script>
+  <script src="connectors.js?v=6"></script>
+  <script src="app.js?v=6"></script>
+</body>
+</html>
