@@ -29,10 +29,12 @@ export function ActivityNotes({
   entityType,
   entityId,
   refreshSignal = 0,
+  showActivity = true,
 }: {
   entityType: string;
   entityId: string;
   refreshSignal?: number;
+  showActivity?: boolean;
 }) {
   const [comments, setComments] = React.useState<CommentRow[]>([]);
   const [activity, setActivity] = React.useState<ActivityRow[]>([]);
@@ -75,7 +77,7 @@ export function ActivityNotes({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <div className={showActivity ? "grid grid-cols-1 gap-5 lg:grid-cols-2" : "grid grid-cols-1 gap-5"}>
       {/* Comments */}
       <div className="rounded-xl border border-line bg-ink-panel p-6">
         <Eyebrow>/ NOTES</Eyebrow>
@@ -101,6 +103,7 @@ export function ActivityNotes({
       </div>
 
       {/* Activity */}
+      {showActivity ? (
       <div className="rounded-xl border border-line bg-ink-panel p-6">
         <Eyebrow>/ ACTIVITY</Eyebrow>
         <div className="mt-4 max-h-[22rem] space-y-2.5 overflow-y-auto pr-1">
@@ -115,6 +118,7 @@ export function ActivityNotes({
           ))}
         </div>
       </div>
+      ) : null}
     </div>
   );
 }

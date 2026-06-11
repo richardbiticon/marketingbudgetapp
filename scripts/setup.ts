@@ -56,6 +56,53 @@ const tables = [
     "summary" text NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS "planned_emails" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "send_date" text NOT NULL,
+    "track" text DEFAULT 'teams' NOT NULL,
+    "platform" text DEFAULT 'Redo' NOT NULL,
+    "subject_a" text NOT NULL,
+    "subject_b" text,
+    "preheader" text,
+    "body" text,
+    "status" text DEFAULT 'draft' NOT NULL,
+    "owner" text,
+    "html" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "social_posts" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "post_date" text NOT NULL,
+    "pillar" text DEFAULT 'Education' NOT NULL,
+    "concept" text NOT NULL,
+    "caption" text,
+    "format" text,
+    "status" text DEFAULT 'planned' NOT NULL,
+    "owner" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "attachments" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "entity_type" text NOT NULL,
+    "entity_id" text NOT NULL,
+    "filename" text NOT NULL,
+    "mime" text NOT NULL,
+    "data" text NOT NULL,
+    "size_bytes" integer DEFAULT 0 NOT NULL,
+    "uploader" text DEFAULT 'Someone' NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "inbound_emails" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "to_addr" text,
+    "from_addr" text,
+    "subject" text DEFAULT '' NOT NULL,
+    "html" text NOT NULL,
+    "matched_email_id" uuid,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
 ];
 
 async function main() {
