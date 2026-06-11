@@ -73,7 +73,7 @@ export function SocialDrawer({
           <DialogDescription>{f.postDate} · {f.pillar}{f.format ? ` · ${f.format}` : ""}</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+        <div className="space-y-4 pr-1">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <Label>Post date</Label>

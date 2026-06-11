@@ -782,10 +782,11 @@ ul.bullets li { color: var(--text); }
 }
 .login.gone { opacity: 0; pointer-events: none; }
 .login-card {
-  width: min(1060px, 95vw); height: min(640px, 88vh); display: grid; grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--hair2); border-radius: 18px; overflow: hidden; background: #0e0f12;
+  width: min(1060px, 95vw); height: auto; max-height: 92vh; display: grid; grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--hair2); border-radius: 18px; overflow: auto; background: #0e0f12;
   box-shadow: 0 50px 140px rgba(0,0,0,.7);
 }
+.login-left { min-height: 520px; }
 .login-left { position: relative; display: flex; align-items: center; padding: 0 9%; overflow: hidden;
   background: radial-gradient(700px 540px at 22% 28%, rgba(200,16,46,.6), transparent 62%), linear-gradient(150deg, #25101a 0%, #140f12 45%, #0c0d0f 100%); }
 .login-left::after { content: ""; position: absolute; inset: 0;
@@ -825,4 +826,9 @@ ul.bullets li { color: var(--text); }
   .login-card { grid-template-columns: 1fr; height: min(620px, 92vh); }
   .login-left { display: none; }
   .login-right { padding: 0 28px; }
+}
+
+/* Global 1.5x scale on desktop. Phones keep 1x. */
+@media (min-width: 768px) {
+  html { zoom: 1.5; }
 }

@@ -34,3 +34,9 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 
 .tnum { font-variant-numeric: tabular-nums; }
+
+/* Global 1.5x scale on desktop. zoom scales text, spacing, icons, and
+   charts uniformly. Phones keep 1x so nothing overflows. */
+@media (min-width: 768px) {
+  html { zoom: 1.5; }
+}

@@ -144,7 +144,7 @@ export function EmailDrawer({
           ))}
         </div>
 
-        <div className="max-h-[58vh] overflow-y-auto pr-1">
+        <div className="pr-1">
           {tab === "details" ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -214,7 +214,7 @@ export function EmailDrawer({
             <div className="space-y-4">
               {html ? (
                 <div className="overflow-hidden rounded-lg border border-line bg-white">
-                  <iframe title="Email preview" sandbox="" srcDoc={html} className="h-[52vh] w-full bg-white" />
+                  <iframe title="Email preview" sandbox="" srcDoc={html} className="h-[52vh] w-full bg-white md:h-[34vh]" />
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-line2 p-6 text-center">
