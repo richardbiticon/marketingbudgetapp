@@ -10,11 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Theme-aware: these resolve to CSS vars defined in globals.css and
+        // flip between dark and light via the html class.
         ink: {
-          DEFAULT: "#1a1a1a",
-          deep: "#141414",
-          raised: "#1f1f1f",
-          panel: "#1c1c1c",
+          DEFAULT: "var(--bg)",
+          deep: "var(--surface-deep)",
+          raised: "var(--surface-raised)",
+          panel: "var(--surface)",
         },
         red: {
           DEFAULT: "#D7172A",
@@ -22,17 +24,17 @@ const config: Config = {
           deep: "#a50d24",
         },
         cream: {
-          light: "#fbf8f3",
-          base: "#f7f3ec",
-          deep: "#ede7da",
+          light: "var(--fg)",
+          base: "var(--fg-2)",
+          deep: "var(--cream-deep)",
         },
         slate: {
           shared: "#6b7280",
           sharedLight: "#9aa1ad",
         },
-        line: "rgba(255,255,255,0.08)",
-        line2: "rgba(255,255,255,0.14)",
-        dim: "#8d897f",
+        line: "var(--line)",
+        line2: "var(--line2)",
+        dim: "var(--muted)",
       },
       fontFamily: {
         sans: ['"Helvetica Neue"', "Helvetica", "Arial", "system-ui", "sans-serif"],

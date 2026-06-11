@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronLeft, Mail, Plus, Image as ImageIcon } from "lucide-react";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { Identity } from "./Identity";
+import { ThemeToggle } from "./ThemeToggle";
 import { ActivityNotes } from "./ActivityNotes";
 import { EmailDrawer } from "./EmailDrawer";
 import { SocialDrawer } from "./SocialDrawer";
@@ -116,6 +117,7 @@ export function CampaignsApp() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#57c47b]" /> Live
           </span>
           <Identity />
+          <ThemeToggle />
           <MonthSwitcher period={period} onChange={setPeriod} />
         </div>
       </header>

@@ -9,6 +9,7 @@ import { ChannelChart } from "./ChannelChart";
 import { TargetVsActual } from "./TargetVsActual";
 import { ExpensesTable } from "./ExpensesTable";
 import { Identity } from "./Identity";
+import { ThemeToggle } from "./ThemeToggle";
 import { ActivityNotes } from "./ActivityNotes";
 import { SectionLabel, Eyebrow } from "./bits";
 import { Input } from "./ui/input";
@@ -145,6 +146,7 @@ export function BudgetApp({ initial }: { initial: InitialData }) {
             <span className="h-1.5 w-1.5 rounded-full bg-[#57c47b]" /> Live
           </span>
           <Identity />
+          <ThemeToggle />
           <MonthSwitcher period={period} onChange={setPeriod} />
         </div>
       </header>

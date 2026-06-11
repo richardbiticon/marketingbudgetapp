@@ -73,7 +73,7 @@ export function OverviewCards({
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Carve-out tracker */}
-        <div className="rounded-xl border border-line2 bg-gradient-to-b from-[#15171c] to-[#0f1013] p-6 shadow-[0_0_26px_rgba(215,23,42,.25)] lg:col-span-2">
+        <div className="rounded-xl border border-line2 bg-ink-raised p-6 shadow-[0_0_26px_rgba(215,23,42,.25)] lg:col-span-2">
           <Eyebrow>/ TEST AND INNOVATION CARVE-OUT</Eyebrow>
           <div className="mt-3 flex items-baseline gap-3">
             <span className="text-4xl font-bold tabular-nums text-cream-light">{pct(co.actualPct, 1)}</span>

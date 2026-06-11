@@ -832,3 +832,48 @@ ul.bullets li { color: var(--text); }
 @media (min-width: 768px) {
   html { zoom: 1.5; }
 }
+
+/* ============================================================
+   LIGHT THEME (html.light flips the dark token layer)
+   Brand cream + ink. Shared with the Next app via the cookie.
+   ============================================================ */
+:root { color-scheme: dark; }
+html.light {
+  color-scheme: light;
+  --ink-os: #efe9df; --ink-os2: #e4ddcf;
+  --bg: #f3efe7;
+  --surface: #ffffff; --surface-2: #f6f1e8; --surface-3: #ede6d8;
+  --hair: rgba(26,26,26,0.10); --hair2: rgba(26,26,26,0.18);
+  --text: #1a1a1a; --text-dim: #756c5e;
+  --line: rgba(26,26,26,0.10); --line-ink: rgba(26,26,26,0.12);
+  --muted: #756c5e; --muted-ink: #756c5e;
+  --cream-ink: #2a241a; --cream-deep: #d9d1c1;
+  --done-bg: rgba(47,111,62,0.13); --done: #2f6f3e;
+  --progress-bg: rgba(154,106,18,0.15); --progress: #9a6a12;
+  --blocked-bg: rgba(200,16,46,0.12);
+  --idle-bg: rgba(0,0,0,0.05); --idle: #807868;
+}
+/* Shell surfaces that were hardcoded dark */
+html.light .statusbar { background: rgba(247,243,236,0.82); border-bottom-color: var(--line); }
+html.light .sb-mark, html.light .sb-right .qtr, html.light .sb-right .clock { color: var(--text); }
+html.light .dock { background: #efe9df; border-right-color: var(--line); }
+html.light .dock-home { background: var(--surface-2); color: var(--text); }
+html.light .app-bar { background: rgba(255,255,255,0.82); border-bottom-color: var(--line); }
+html.light .scanner-box textarea,
+html.light .auto-card .spec,
+html.light .email-mock .em-top { background: var(--surface-2); color: var(--text); }
+html.light .cad-teams { background: #d7dee8; color: #2b3340; }
+html.light .cad-fuze { background: #f4dde2; color: #7a2738; }
+html.light .panel.ink { background: linear-gradient(160deg,#fff,#f3eee5); color: var(--text); }
+html.light .panel.ink .mono { color: var(--muted); }
+html.light .pct-row .pct { text-shadow: none; }
+html.light .view-head h1, html.light .sb-hello h2 { text-shadow: none; }
+
+/* Theme toggle button in the status bar */
+.theme-toggle { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--hair2);
+  background: var(--surface); color: var(--text); display: inline-grid; place-items: center; cursor: pointer; transition: .15s; }
+.theme-toggle:hover { background: var(--surface-2); }
+.theme-toggle svg { width: 15px; height: 15px; }
+html.light body { color: var(--text); }
+html.light .sb-hello h2 { color: var(--text); }
+html.light .app-tile.cream .ti-icon { background: var(--red); }

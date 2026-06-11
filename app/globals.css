@@ -2,36 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Theme tokens. Dark is the default. The .light class on <html> flips them.
+   These back the Tailwind color tokens (ink/cream/dim/line) so the whole app
+   themes without touching component classes. */
+:root, html.dark {
+  --bg: #1a1a1a;
+  --surface: #1c1c1c;
+  --surface-deep: #141414;
+  --surface-raised: #1f1f1f;
+  --fg: #f1efe9;
+  --fg-2: #e6e2da;
+  --cream-deep: #ede7da;
+  --muted: #8d897f;
+  --line: rgba(255, 255, 255, 0.08);
+  --line2: rgba(255, 255, 255, 0.16);
+  --grid-line: rgba(255, 255, 255, 0.02);
+  --overlay: rgba(255, 255, 255, 0.04);
   color-scheme: dark;
 }
 
-html, body {
-  height: 100%;
+html.light {
+  --bg: #f3efe7;
+  --surface: #ffffff;
+  --surface-deep: #f1ece1;
+  --surface-raised: #ffffff;
+  --fg: #1a1a1a;
+  --fg-2: #2a241a;
+  --cream-deep: #6b6256;
+  --muted: #756c5e;
+  --line: rgba(26, 26, 26, 0.12);
+  --line2: rgba(26, 26, 26, 0.2);
+  --grid-line: rgba(26, 26, 26, 0.035);
+  --overlay: rgba(26, 26, 26, 0.05);
+  color-scheme: light;
 }
 
+html, body { height: 100%; }
+
 body {
-  background-color: #1a1a1a;
+  background-color: var(--bg);
   /* faint telemetry grid + a subtle red glow in the top right */
   background-image:
     radial-gradient(900px 520px at 92% -6%, rgba(215, 23, 42, 0.16), transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 100% 100%, 38px 38px, 38px 38px;
   background-attachment: fixed;
-  color: #f1efe9;
+  color: var(--fg);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "tnum";
 }
 
-::selection {
-  background: #d7172a;
-  color: #fff;
-}
+::selection { background: #d7172a; color: #fff; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* Subtle hover/overlay surfaces flip with the theme. */
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.04\] { background-color: rgba(26, 26, 26, 0.035) !important; }
+html.light .bg-white\/\[0\.06\],
+html.light .bg-white\/\[0\.08\],
+html.light .bg-white\/\[0\.1\] { background-color: rgba(26, 26, 26, 0.06) !important; }
 
 .tnum { font-variant-numeric: tabular-nums; }
 
