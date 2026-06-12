@@ -194,6 +194,15 @@ export const rebuildImports = pgTable("rebuild_imports", {
   actor: text("actor").notNull().default("Someone"),
 });
 
+// ---- The Machine: the visual board, saved as one JSON document ----
+export const machineBoards = pgTable("machine_boards", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().default("The Machine"),
+  data: jsonb("data").notNull().default({ nodes: [], edges: [] }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: text("updated_by").notNull().default("Someone"),
+});
+
 export const rebuildGuideline = pgTable("rebuild_guideline", {
   id: uuid("id").primaryKey().defaultRandom(),
   content: text("content").notNull().default(""),

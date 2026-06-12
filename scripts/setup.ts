@@ -161,6 +161,13 @@ const tables = [
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "actor" text DEFAULT 'Someone' NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS "machine_boards" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "name" text DEFAULT 'The Machine' NOT NULL,
+    "data" jsonb DEFAULT '{"nodes":[],"edges":[]}' NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_by" text DEFAULT 'Someone' NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS "rebuild_guideline" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
     "content" text DEFAULT '' NOT NULL,

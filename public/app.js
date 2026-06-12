@@ -1352,6 +1352,8 @@
   // Navigation TREE. A node is a leaf (has render) or a folder (has children).
   // Add child tiles here as the system grows; the shell handles the rest.
   const NAV = [
+    { key: "machine", title: "The Machine", label: "MACHINE", color: "red", icon: "machine", href: "/machine",
+      glance: function () { return "BUILD MODE"; } },
     { key: "overview", title: "Overview", label: "OVERVIEW", color: "ink", icon: "overview", render: viewOverview },
     { key: "accounts", title: "Accounts", label: "ACCOUNTS", color: "red", icon: "accounts", render: viewAccounts },
     { key: "rocks", title: "Rocks", label: "ROCKS", color: "cream", icon: "rocks", render: viewRocks },
@@ -1383,6 +1385,7 @@
       automation: '<path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/>',
       content: '<rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-4 4 3 3-2 4 3"/>',
       lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+      machine: '<rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M8 11v3M6.5 12.5h3M15 11.5h.01M18 13.5h.01"/>',
       home: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
       back: '<path d="M15 18l-6-6 6-6"/>',
     };
