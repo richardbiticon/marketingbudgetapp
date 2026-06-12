@@ -90,7 +90,18 @@ html.light .bg-white\/\[0\.1\] { background-color: rgba(26, 26, 26, 0.06) !impor
 .machine-pulse { animation: machine-sel-pulse 1.4s ease-in-out infinite; }
 
 /* Global 1.5x scale on desktop. zoom scales text, spacing, icons, and
-   charts uniformly. Phones keep 1x so nothing overflows. */
+   charts uniformly. Phones keep 1x so nothing overflows. The Machine board
+   opts out: page zoom breaks pointer-to-canvas math and the canvas has its
+   own zoom anyway. */
 @media (min-width: 768px) {
   html { zoom: 1.5; }
+  html.machine-zoom-off { zoom: 1; }
 }
+
+/* The Machine: extra game feel */
+@keyframes machine-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.machine-bob { animation: machine-bob 2.6s ease-in-out infinite; }
+.machine-bob2 { animation: machine-bob 3.1s ease-in-out 0.6s infinite; }

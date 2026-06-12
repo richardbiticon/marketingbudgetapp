@@ -3,13 +3,15 @@ import * as React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  ChevronLeft, Save, Link2, Trash2, ZoomIn, ZoomOut, Maximize2,
-  ClipboardList, Phone, ShoppingCart, Mail, PhoneCall, HelpCircle, X,
+  ChevronLeft, Save, Link2, Trash2, ZoomIn, ZoomOut, Maximize2, Plus,
+  ClipboardList, Phone, ShoppingCart, Mail, PhoneCall, HelpCircle, X, UserPlus,
 } from "lucide-react";
 import { Identity } from "../Identity";
 import { ThemeToggle } from "../ThemeToggle";
 import { Eyebrow } from "../bits";
 import { Button } from "../ui/button";
+import { Input, Label } from "../ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { authedHeaders } from "@/lib/actor";
 import {
   type BoardData, type MachineNode, type NodeType,
@@ -19,6 +21,8 @@ import { cn } from "@/lib/utils";
 
 const WORLD = { w: 3000, h: 1600 };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+
+interface PositionLite { id: string; title: string; status: string; applicantCount: number }
 
 const ENDPOINT_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   contact_form: ClipboardList, call: Phone, purchase: ShoppingCart, email_us: Mail, call_form: PhoneCall,
@@ -33,20 +37,22 @@ function timeAgo(iso: string | null): string {
 }
 
 /* ---------- sprites ---------- */
-function PersonSprite({ hired }: { hired: boolean }) {
+function PersonSprite({ hired, bob = 0 }: { hired: boolean; bob?: number }) {
   const c = hired ? "#57c47b" : "#D7172A";
   return (
-    <svg viewBox="0 0 64 72" className="h-16 w-14">
-      <ellipse cx="32" cy="66" rx="20" ry="5" fill={c} opacity=".18" />
-      {!hired ? <circle cx="32" cy="34" r="29" fill="none" stroke={c} strokeWidth="1.5" strokeDasharray="4 5" opacity=".6" /> : null}
-      <circle cx="32" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="3.4" />
-      <path d="M32 23 V45 M32 30 L18 38 M32 30 L46 38 M32 45 L21 62 M32 45 L43 62"
-        fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
-      <circle cx="50" cy="10" r="5.5" fill={c} />
-      {hired
-        ? <path d="M47.4 10 l1.8 1.9 3.4-3.7" stroke="#fff" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-        : <text x="50" y="13" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">!</text>}
-    </svg>
+    <span className={bob === 1 ? "machine-bob" : bob === 2 ? "machine-bob2" : undefined}>
+      <svg viewBox="0 0 64 72" className="h-16 w-14">
+        <ellipse cx="32" cy="66" rx="20" ry="5" fill={c} opacity=".18" />
+        {!hired ? <circle cx="32" cy="34" r="29" fill="none" stroke={c} strokeWidth="1.5" strokeDasharray="4 5" opacity=".6" /> : null}
+        <circle cx="32" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="3.4" />
+        <path d="M32 23 V45 M32 30 L18 38 M32 30 L46 38 M32 45 L21 62 M32 45 L43 62"
+          fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+        <circle cx="50" cy="10" r="5.5" fill={c} />
+        {hired
+          ? <path d="M47.4 10 l1.8 1.9 3.4-3.7" stroke="#fff" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          : <text x="50" y="13" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">!</text>}
+      </svg>
+    </span>
   );
 }
 function RockSprite({ done }: { done: boolean }) {
@@ -78,11 +84,12 @@ function EngineSprite() {
   );
 }
 
-/* ---------- the board ---------- */
+/* ====================================================================== */
 export function MachineBoard() {
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const [board, setBoard] = React.useState<BoardData>({ nodes: [], edges: [] });
   const [meta, setMeta] = React.useState<{ updatedAt: string; updatedBy: string } | null>(null);
+  const [positions, setPositions] = React.useState<PositionLite[]>([]);
   const [dirty, setDirty] = React.useState(false);
   const [pan, setPan] = React.useState({ x: 40, y: 30 });
   const [scale, setScale] = React.useState(0.7);
@@ -93,19 +100,32 @@ export function MachineBoard() {
   const [linking, setLinking] = React.useState<string | null>(null);
   const [portalPicker, setPortalPicker] = React.useState(false);
   const [legend, setLegend] = React.useState(false);
+  const [spawnOpen, setSpawnOpen] = React.useState(false);
   const [saveState, setSaveState] = React.useState<"idle" | "saving" | "saved">("idle");
   const [banner, setBanner] = React.useState<{ kind: "stale" | "conflict"; by: string } | null>(null);
 
   const dirtyRef = React.useRef(dirty); dirtyRef.current = dirty;
   const metaRef = React.useRef(meta); metaRef.current = meta;
+  const scaleRef = React.useRef(scale); scaleRef.current = scale;
+  const panRef = React.useRef(pan); panRef.current = pan;
   const drag = React.useRef<{ mode: "node" | "pan"; id?: string; startX: number; startY: number; origX: number; origY: number; moved: boolean } | null>(null);
 
   const mutate = React.useCallback((fn: (b: BoardData) => BoardData) => {
     setBoard((b) => fn(b)); setDirty(true);
   }, []);
 
-  /* load + light poll: explicit Save model, the poll only watches for
-     teammates' saves and adopts them when you have nothing unsaved. */
+  /* The app-wide page zoom breaks pointer math on a custom canvas.
+     This page opts out; the canvas has its own zoom. */
+  React.useEffect(() => {
+    document.documentElement.classList.add("machine-zoom-off");
+    return () => document.documentElement.classList.remove("machine-zoom-off");
+  }, []);
+
+  /* ---------- data ---------- */
+  const loadPositions = React.useCallback(async () => {
+    const r = await fetch("/api/machine/positions", { cache: "no-store" });
+    if (r.ok) setPositions((await r.json()).positions);
+  }, []);
   const load = React.useCallback(async () => {
     const r = await fetch("/api/machine", { cache: "no-store" });
     if (!r.ok) return;
@@ -113,9 +133,10 @@ export function MachineBoard() {
     setBoard(row.data); setMeta({ updatedAt: row.updatedAt, updatedBy: row.updatedBy });
     setDirty(false); setBanner(null);
   }, []);
-  React.useEffect(() => { load(); }, [load]);
+  React.useEffect(() => { load(); loadPositions(); }, [load, loadPositions]);
   React.useEffect(() => {
     const id = setInterval(async () => {
+      loadPositions();
       const r = await fetch("/api/machine", { cache: "no-store" });
       if (!r.ok) return;
       const { board: row } = await r.json();
@@ -123,13 +144,11 @@ export function MachineBoard() {
       if (cur && row.updatedAt !== cur.updatedAt) {
         if (!dirtyRef.current) {
           setBoard(row.data); setMeta({ updatedAt: row.updatedAt, updatedBy: row.updatedBy });
-        } else {
-          setBanner({ kind: "stale", by: row.updatedBy });
-        }
+        } else setBanner({ kind: "stale", by: row.updatedBy });
       }
     }, 20000);
     return () => clearInterval(id);
-  }, []);
+  }, [loadPositions]);
 
   async function save(force = false) {
     setSaveState("saving");
@@ -151,11 +170,28 @@ export function MachineBoard() {
     } else setSaveState("idle");
   }
 
-  /* ---------- coordinates ---------- */
+  /* ---------- geometry ---------- */
   function world(e: { clientX: number; clientY: number }) {
     const r = viewportRef.current!.getBoundingClientRect();
     return { x: (e.clientX - r.left - pan.x) / scale, y: (e.clientY - r.top - pan.y) / scale };
   }
+
+  /* wheel zoom toward the cursor; native listener so preventDefault works */
+  React.useEffect(() => {
+    const vp = viewportRef.current; if (!vp) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = vp.getBoundingClientRect();
+      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      const prev = scaleRef.current;
+      const next = Math.min(1.7, Math.max(0.3, prev * (e.deltaY > 0 ? 0.9 : 1.1)));
+      const p = panRef.current;
+      setPan({ x: mx - ((mx - p.x) / prev) * next, y: my - ((my - p.y) / prev) * next });
+      setScale(next);
+    };
+    vp.addEventListener("wheel", onWheel, { passive: false });
+    return () => vp.removeEventListener("wheel", onWheel);
+  }, []);
 
   /* ---------- pointer interactions ---------- */
   function onCanvasPointerDown(e: React.PointerEvent) {
@@ -167,10 +203,8 @@ export function MachineBoard() {
         x: Math.round(w.x - s.w / 2), y: Math.round(w.y - s.h / 2),
         label: placing.type === "endpoint"
           ? ENDPOINT_KINDS[placing.endpointKind as keyof typeof ENDPOINT_KINDS]
-          : placing.type === "person" ? "New teammate"
           : placing.type === "task" ? "New task"
           : placing.type === "engine" ? "New engine" : "Note",
-        ...(placing.type === "person" ? { state: "needed" } : {}),
         ...(placing.type === "task" ? { state: "todo" } : {}),
         ...(placing.endpointKind ? { endpointKind: placing.endpointKind } : {}),
       };
@@ -179,7 +213,6 @@ export function MachineBoard() {
       return;
     }
     drag.current = { mode: "pan", startX: e.clientX, startY: e.clientY, origX: pan.x, origY: pan.y, moved: false };
-    (e.target as Element).setPointerCapture?.(e.pointerId);
   }
   function onNodePointerDown(e: React.PointerEvent, node: MachineNode) {
     if (e.button !== 0) return;
@@ -196,14 +229,13 @@ export function MachineBoard() {
     drag.current = { mode: "node", id: node.id, startX: e.clientX, startY: e.clientY, origX: node.x, origY: node.y, moved: false };
   }
   function onPointerMove(e: React.PointerEvent) {
-    if (placing) { setGhost(world(e)); }
+    if (placing) setGhost(world(e));
     const d = drag.current;
     if (!d) return;
     const dx = e.clientX - d.startX, dy = e.clientY - d.startY;
     if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
-    if (d.mode === "pan") {
-      setPan({ x: d.origX + dx, y: d.origY + dy });
-    } else if (d.id) {
+    if (d.mode === "pan") setPan({ x: d.origX + dx, y: d.origY + dy });
+    else if (d.id) {
       const nx = Math.round(d.origX + dx / scale), ny = Math.round(d.origY + dy / scale);
       setBoard((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === d.id ? { ...n, x: nx, y: ny } : n)) }));
     }
@@ -211,19 +243,15 @@ export function MachineBoard() {
   function onPointerUp() {
     const d = drag.current;
     if (d?.mode === "node" && d.moved) setDirty(true);
-    if (d?.mode === "pan" && !d.moved) { setSelected(null); setSelectedEdge(null); setLinking(null); }
+    if (d?.mode === "pan" && !d.moved) { setSelected(null); setSelectedEdge(null); setLinking(null); setPortalPicker(false); }
     drag.current = null;
-  }
-  function onWheel(e: React.WheelEvent) {
-    const next = Math.min(1.6, Math.max(0.35, scale * (e.deltaY > 0 ? 0.92 : 1.08)));
-    setScale(next);
   }
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.key === "Escape") { setPlacing(null); setGhost(null); setLinking(null); setPortalPicker(false); }
-      if ((e.key === "Delete" || e.key === "Backspace")) {
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "Escape") { setPlacing(null); setGhost(null); setLinking(null); setPortalPicker(false); setSpawnOpen(false); }
+      if (e.key === "Delete" || e.key === "Backspace") {
         if (selected) {
           mutate((b) => ({
             nodes: b.nodes.filter((n) => n.id !== selected),
@@ -253,23 +281,90 @@ export function MachineBoard() {
   }
   const fitted = React.useRef(false);
   React.useEffect(() => {
-    if (!fitted.current && board.nodes.length) { fitted.current = true; setTimeout(fit, 50); }
+    if (!fitted.current && board.nodes.length) { fitted.current = true; setTimeout(fit, 60); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board.nodes.length]);
 
-  /* ---------- edges geometry ---------- */
   const nodeMap = React.useMemo(() => new Map(board.nodes.map((n) => [n.id, n])), [board.nodes]);
+  const posById = React.useMemo(() => new Map(positions.map((p) => [p.id, p])), [positions]);
   function edgePath(fromId: string, toId: string): string | null {
     const a = nodeMap.get(fromId), b = nodeMap.get(toId);
     if (!a || !b) return null;
     const sa = NODE_SIZE[a.type], sb = NODE_SIZE[b.type];
-    const acx = a.x + sa.w / 2, bcx = b.x + sb.w / 2;
-    const rightward = bcx >= acx;
+    const rightward = b.x + sb.w / 2 >= a.x + sa.w / 2;
     const x1 = rightward ? a.x + sa.w : a.x, y1 = a.y + sa.h / 2;
     const x2 = rightward ? b.x : b.x + sb.w, y2 = b.y + sb.h / 2;
     const k = Math.max(40, Math.abs(x2 - x1) / 2);
-    const c1 = rightward ? x1 + k : x1 - k, c2 = rightward ? x2 - k : x2 + k;
-    return `M ${x1} ${y1} C ${c1} ${y1}, ${c2} ${y2}, ${x2} ${y2}`;
+    return `M ${x1} ${y1} C ${rightward ? x1 + k : x1 - k} ${y1}, ${rightward ? x2 - k : x2 + k} ${y2}, ${x2} ${y2}`;
+  }
+
+  /* ---------- spawn deploy ---------- */
+  function nextLaneY(type: NodeType, defaultY: number): number {
+    const ys = board.nodes.filter((n) => n.type === type).map((n) => n.y + NODE_SIZE[n.type].h);
+    return ys.length ? Math.max(...ys) + 60 : defaultY;
+  }
+  async function deployHuman(input: {
+    mode: "existing" | "new"; positionId?: string; title: string;
+    engineIds: string[]; newEngines: string[]; tasks: string[];
+  }) {
+    let pos: { id: string; title: string } | null = null;
+    if (input.mode === "new") {
+      const r = await fetch("/api/machine/spawn", {
+        method: "POST", headers: authedHeaders(),
+        body: JSON.stringify({ title: input.title, tasks: input.tasks }),
+      });
+      if (!r.ok) throw new Error((await r.json()).error ?? "Could not create the role");
+      pos = (await r.json()).position;
+    } else if (input.positionId) {
+      const p = posById.get(input.positionId);
+      pos = p ? { id: p.id, title: p.title } : null;
+      if (pos && input.tasks.length) {
+        await fetch("/api/machine/reflect", {
+          method: "POST", headers: authedHeaders(),
+          body: JSON.stringify({ positionId: pos.id, addTasks: input.tasks }),
+        });
+      }
+    }
+
+    const personId = uid();
+    const personY = nextLaneY("person", 120);
+    const newNodes: MachineNode[] = [{
+      id: personId, type: "person", x: 80, y: personY,
+      label: pos?.title ?? input.title, state: "needed",
+      ...(pos ? { positionId: pos.id } : {}),
+    }];
+    const engineIds = [...input.engineIds];
+    input.newEngines.forEach((name, i) => {
+      const id = uid();
+      engineIds.push(id);
+      newNodes.push({ id, type: "engine", x: 560, y: nextLaneY("engine", 140) + i * 200, label: name });
+    });
+    const firstEngine = engineIds[0];
+    input.tasks.forEach((label, i) => {
+      const id = uid();
+      newNodes.push({ id, type: "task", x: 340, y: personY - 20 + i * 120, label, state: "todo" });
+    });
+    const newEdges = [
+      ...engineIds.map((eid) => ({ id: uid(), from: personId, to: eid })),
+      ...newNodes.filter((n) => n.type === "task").map((t) => ({
+        id: uid(), from: firstEngine ? t.id : personId, to: firstEngine ? firstEngine : t.id,
+      })),
+    ];
+    mutate((b) => ({ nodes: [...b.nodes, ...newNodes], edges: [...b.edges, ...newEdges] }));
+    setSelected(personId);
+    loadPositions();
+  }
+
+  async function toggleHired(node: MachineNode) {
+    const nextState = node.state === "hired" ? "needed" : "hired";
+    mutate((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === node.id ? { ...n, state: nextState } : n)) }));
+    if (node.positionId) {
+      await fetch("/api/machine/reflect", {
+        method: "POST", headers: authedHeaders(),
+        body: JSON.stringify({ positionId: node.positionId, action: nextState === "hired" ? "hired" : "needed" }),
+      });
+      loadPositions();
+    }
   }
 
   const sel = selected ? nodeMap.get(selected) : null;
@@ -279,11 +374,12 @@ export function MachineBoard() {
     engines: board.nodes.filter((n) => n.type === "engine").length,
     tasks: board.nodes.filter((n) => n.type === "task").length,
   };
+  const linkedIds = new Set(board.nodes.filter((n) => n.positionId).map((n) => n.positionId));
+  const openRoles = positions.filter((p) => !linkedIds.has(p.id) && p.status !== "archived");
 
   /* ---------- render ---------- */
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      {/* header */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
         <div className="flex items-center gap-3">
           <a href="/" title="Back to OS"
@@ -313,13 +409,11 @@ export function MachineBoard() {
         </div>
       </header>
 
-      {/* banners */}
       {banner ? (
         <div className="flex items-center justify-between gap-3 border-b border-red/40 bg-red/10 px-5 py-2 text-sm text-red">
           <span>
-            {banner.kind === "conflict"
-              ? `${banner.by} saved while you were editing.`
-              : `${banner.by} saved a newer version.`} Loading it will replace your unsaved changes.
+            {banner.kind === "conflict" ? `${banner.by} saved while you were editing.` : `${banner.by} saved a newer version.`}
+            {" "}Loading it will replace your unsaved changes.
           </span>
           <span className="flex gap-2">
             <Button size="sm" variant="danger" onClick={() => load()}>Load latest</Button>
@@ -328,7 +422,6 @@ export function MachineBoard() {
         </div>
       ) : null}
 
-      {/* canvas */}
       <div
         ref={viewportRef}
         className={cn(
@@ -338,34 +431,36 @@ export function MachineBoard() {
         onPointerDown={onCanvasPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onWheel={onWheel}
       >
         {/* HUD */}
         <div className="pointer-events-none absolute left-4 top-3 z-30 flex gap-3 font-mono text-[10px] uppercase tracking-wider text-dim">
-          <span>{counts.people} people ({counts.toHire} to hire)</span>
+          <span>{counts.people} humans ({counts.toHire} to hire)</span>
           <span>{counts.engines} engines</span>
           <span>{counts.tasks} tasks</span>
-          <span>5 endpoints</span>
         </div>
         <div className="absolute right-4 top-3 z-30 flex gap-1">
-          <Button size="icon" variant="subtle" onClick={() => setScale((s) => Math.min(1.6, s * 1.15))}><ZoomIn className="h-4 w-4" /></Button>
-          <Button size="icon" variant="subtle" onClick={() => setScale((s) => Math.max(0.35, s / 1.15))}><ZoomOut className="h-4 w-4" /></Button>
+          <Button size="icon" variant="subtle" onClick={() => setScale((s) => Math.min(1.7, s * 1.15))}><ZoomIn className="h-4 w-4" /></Button>
+          <Button size="icon" variant="subtle" onClick={() => setScale((s) => Math.max(0.3, s / 1.15))}><ZoomOut className="h-4 w-4" /></Button>
           <Button size="icon" variant="subtle" onClick={fit}><Maximize2 className="h-4 w-4" /></Button>
         </div>
         {linking ? (
           <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-red/50 bg-red/15 px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-red">
             Click a target to link. Esc cancels.
           </div>
-        ) : null}
-        {placing ? (
+        ) : placing ? (
           <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-line2 bg-ink-panel px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cream-base">
             Click the field to place. Esc cancels.
           </div>
         ) : null}
 
         {/* world */}
-        <div className="absolute left-0 top-0" style={{ width: WORLD.w, height: WORLD.h, transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, transformOrigin: "0 0" }}>
-          {/* edges */}
+        <div className="absolute left-0 top-0"
+          style={{
+            width: WORLD.w, height: WORLD.h,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, transformOrigin: "0 0",
+            backgroundImage: "radial-gradient(rgba(128,128,128,.16) 1.5px, transparent 1.5px)",
+            backgroundSize: "44px 44px",
+          }}>
           <svg width={WORLD.w} height={WORLD.h} className="absolute left-0 top-0">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -387,12 +482,12 @@ export function MachineBoard() {
             })}
           </svg>
 
-          {/* nodes */}
-          {board.nodes.map((node) => {
+          {board.nodes.map((node, idx) => {
             const s = NODE_SIZE[node.type];
             const isSel = selected === node.id;
             const isLinkSrc = linking === node.id;
             const Icon = node.type === "endpoint" ? ENDPOINT_ICON[node.endpointKind ?? "purchase"] ?? ShoppingCart : null;
+            const pos = node.positionId ? posById.get(node.positionId) : null;
             return (
               <motion.div key={node.id}
                 initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
@@ -406,12 +501,18 @@ export function MachineBoard() {
                 ) : null}
                 {node.type === "person" ? (
                   <>
-                    <PersonSprite hired={node.state === "hired"} />
+                    <PersonSprite hired={node.state === "hired"} bob={(idx % 2) + 1} />
                     <span className="mt-0.5 max-w-full truncate px-1 text-[12px] font-bold leading-tight text-cream-light">{node.label}</span>
                     {node.sub ? <span className="max-w-full truncate px-1 font-mono text-[9px] uppercase tracking-wider text-dim">{node.sub}</span> : null}
-                    <span className={cn("font-mono text-[8px] uppercase tracking-wider", node.state === "hired" ? "text-[#57c47b]" : "text-red")}>
-                      {node.state === "hired" ? "On the team" : "To hire"}
-                    </span>
+                    {node.state === "hired" ? (
+                      <span className="font-mono text-[8px] uppercase tracking-wider text-[#57c47b]">On the team</span>
+                    ) : pos ? (
+                      <span className={cn("font-mono text-[8px] uppercase tracking-wider", pos.status === "filled" ? "text-[#57c47b]" : "text-red")}>
+                        {pos.status === "filled" ? "Role filled" : `${pos.applicantCount} applicant${pos.applicantCount === 1 ? "" : "s"}`}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[8px] uppercase tracking-wider text-red">To hire</span>
+                    )}
                   </>
                 ) : node.type === "task" ? (
                   <>
@@ -443,7 +544,6 @@ export function MachineBoard() {
             );
           })}
 
-          {/* placement ghost */}
           {placing && ghost ? (
             <div className="pointer-events-none absolute rounded-xl border-2 border-dashed border-red/60 bg-red/5"
               style={{
@@ -453,9 +553,9 @@ export function MachineBoard() {
           ) : null}
         </div>
 
-        {/* selected node toolbar */}
+        {/* selected toolbar */}
         {sel ? (
-          <div className="absolute bottom-24 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-line2 bg-ink-raised px-3 py-2 shadow-2xl">
+          <div className="absolute bottom-28 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-line2 bg-ink-raised px-3 py-2 shadow-2xl">
             <input
               value={sel.label}
               onChange={(e) => mutate((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === sel.id ? { ...n, label: e.target.value } : n)) }))}
@@ -469,8 +569,7 @@ export function MachineBoard() {
               />
             ) : null}
             {sel.type === "person" ? (
-              <Button size="sm" variant="subtle"
-                onClick={() => mutate((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === sel.id ? { ...n, state: n.state === "hired" ? "needed" : "hired" } : n)) }))}>
+              <Button size="sm" variant="subtle" onClick={() => toggleHired(sel)}>
                 {sel.state === "hired" ? "Mark to hire" : "Mark hired"}
               </Button>
             ) : null}
@@ -492,7 +591,7 @@ export function MachineBoard() {
             }}><Trash2 className="h-4 w-4" /></Button>
           </div>
         ) : selectedEdge ? (
-          <div className="absolute bottom-24 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-line2 bg-ink-raised px-3 py-2 shadow-2xl">
+          <div className="absolute bottom-28 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-line2 bg-ink-raised px-3 py-2 shadow-2xl">
             <span className="font-mono text-[11px] uppercase tracking-wider text-dim">Connection selected</span>
             <Button size="sm" variant="danger" onClick={() => {
               mutate((b) => ({ ...b, edges: b.edges.filter((x) => x.id !== selectedEdge) }));
@@ -501,10 +600,15 @@ export function MachineBoard() {
           </div>
         ) : null}
 
-        {/* palette: the inventory bar */}
+        {/* palette: humans first */}
         <div className="absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-end gap-1.5 rounded-2xl border border-line2 bg-ink-raised/95 px-3 py-2 shadow-2xl">
+          <button onClick={() => { setPortalPicker(false); setPlacing(null); setSpawnOpen(true); }}
+            className="relative flex w-24 flex-col items-center gap-0.5 rounded-xl border border-red/60 bg-red/10 px-2 py-2 transition-transform hover:-translate-y-0.5">
+            <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-red px-2 py-px font-mono text-[8px] uppercase tracking-wider text-white">Start here</span>
+            <span className="flex h-12 items-center text-cream-light"><PersonSprite hired={false} /></span>
+            <span className="font-mono text-[9px] uppercase tracking-wider text-red">Spawn human</span>
+          </button>
           {([
-            ["person", "Person", <PersonSprite key="p" hired={false} />],
             ["task", "Task", <RockSprite key="t" done={false} />],
             ["engine", "Engine", <EngineSprite key="e" />],
           ] as [NodeType, string, React.ReactNode][]).map(([type, label, sprite]) => (
@@ -549,7 +653,6 @@ export function MachineBoard() {
           </button>
         </div>
 
-        {/* legend for Corey */}
         {legend ? (
           <div className="absolute left-4 top-12 z-40 w-80 rounded-xl border border-line2 bg-ink-raised p-5 shadow-2xl">
             <div className="flex items-center justify-between">
@@ -558,11 +661,11 @@ export function MachineBoard() {
             </div>
             <ul className="mt-3 space-y-2.5 text-sm text-cream-base/90">
               <li className="flex gap-2.5"><span className="shrink-0 text-cream-light"><PersonSprite hired={false} /></span>
-                A person who runs part of the machine. Red badge means we still need to hire them.</li>
+                A human who runs part of the machine. Spawning one opens the role in the hiring room and shows live applicant counts here.</li>
               <li className="flex items-center gap-2.5"><span className="shrink-0 text-cream-light"><EngineSprite /></span>
                 An engine: a marketing effort that runs on a cadence.</li>
               <li className="flex items-center gap-2.5"><span className="shrink-0 text-cream-light"><RockSprite done={false} /></span>
-                A task that must be built for an engine to work.</li>
+                A task that must be built for an engine to work. Spawned tasks land on the role too.</li>
               <li className="flex items-center gap-2.5">
                 <span className="relative grid h-10 w-10 shrink-0 place-items-center">
                   <span className="machine-portal absolute inset-0 rounded-full border-2 border-red" />
@@ -571,11 +674,163 @@ export function MachineBoard() {
                 An endpoint: one of the five ways a customer reaches us.</li>
             </ul>
             <p className="mt-3 border-t border-line pt-3 text-xs text-dim">
-              Read left to right: people power engines, engines push customers to the five endpoints.
-              Click anything to edit it. Press Save to publish for the team.
+              Everything starts from a human. People power engines, engines push customers to the five endpoints.
+              Press Save to publish the layout for the team.
             </p>
           </div>
         ) : null}
+
+        {spawnOpen ? (
+          <SpawnModal
+            openRoles={openRoles}
+            engines={board.nodes.filter((n) => n.type === "engine")}
+            onClose={() => setSpawnOpen(false)}
+            onDeploy={async (input) => { await deployHuman(input); setSpawnOpen(false); }}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- the human spawner ---------- */
+function SpawnModal({
+  openRoles, engines, onClose, onDeploy,
+}: {
+  openRoles: PositionLite[];
+  engines: MachineNode[];
+  onClose: () => void;
+  onDeploy: (input: { mode: "existing" | "new"; positionId?: string; title: string; engineIds: string[]; newEngines: string[]; tasks: string[] }) => Promise<void>;
+}) {
+  const [mode, setMode] = React.useState<"existing" | "new">(openRoles.length ? "existing" : "new");
+  const [positionId, setPositionId] = React.useState(openRoles[0]?.id ?? "");
+  const [title, setTitle] = React.useState("");
+  const [engineIds, setEngineIds] = React.useState<string[]>([]);
+  const [newEngines, setNewEngines] = React.useState<string[]>([]);
+  const [engineDraft, setEngineDraft] = React.useState("");
+  const [tasks, setTasks] = React.useState<string[]>([""]);
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
+
+  async function deploy() {
+    setErr(null);
+    const t = mode === "new" ? title.trim() : (openRoles.find((p) => p.id === positionId)?.title ?? "");
+    if (!t) { setErr("Name the role first."); return; }
+    setBusy(true);
+    try {
+      await onDeploy({
+        mode, positionId: mode === "existing" ? positionId : undefined, title: t,
+        engineIds, newEngines, tasks: tasks.map((x) => x.trim()).filter(Boolean),
+      });
+    } catch (e: any) {
+      setErr(e.message ?? "Could not deploy"); setBusy(false);
+    }
+  }
+
+  return (
+    <div className="absolute inset-0 z-50 grid place-items-center bg-black/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-xl rounded-2xl border border-line2 bg-ink-raised p-6 shadow-[0_40px_120px_rgba(0,0,0,.6)]">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-red text-white"><UserPlus className="h-5 w-5" /></span>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight text-cream-light">Spawn a human</h2>
+              <p className="text-xs text-dim">Everything starts from a person. Deploy the role, then wire what they run.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-dim hover:text-cream-light"><X className="h-5 w-5" /></button>
+        </div>
+
+        <div className="mt-5 max-h-[56vh] space-y-4 overflow-y-auto pr-1">
+          {/* role */}
+          <div>
+            <Eyebrow>/ 1. THE ROLE</Eyebrow>
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => setMode("existing")} disabled={!openRoles.length}
+                className={cn("rounded-full border px-4 py-1.5 font-mono text-[10px] uppercase tracking-wider disabled:opacity-40",
+                  mode === "existing" ? "border-red bg-red text-white" : "border-line2 text-cream-base")}>
+                Open role
+              </button>
+              <button onClick={() => setMode("new")}
+                className={cn("rounded-full border px-4 py-1.5 font-mono text-[10px] uppercase tracking-wider",
+                  mode === "new" ? "border-red bg-red text-white" : "border-line2 text-cream-base")}>
+                New role
+              </button>
+            </div>
+            <div className="mt-3">
+              {mode === "existing" ? (
+                <Select value={positionId} onValueChange={setPositionId}>
+                  <SelectTrigger><SelectValue placeholder="Pick a role" /></SelectTrigger>
+                  <SelectContent>
+                    {openRoles.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.title} ({p.applicantCount} applicants)</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div>
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Role title, e.g. Email Marketing Specialist" autoFocus />
+                  <p className="mt-1.5 text-xs text-dim">Deploy creates this role in the hiring room right away.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* engines */}
+          <div>
+            <Eyebrow>/ 2. ENGINES THEY POWER</Eyebrow>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {engines.map((en) => (
+                <button key={en.id}
+                  onClick={() => setEngineIds((x) => x.includes(en.id) ? x.filter((i) => i !== en.id) : [...x, en.id])}
+                  className={cn("rounded-full border px-3 py-1 text-xs",
+                    engineIds.includes(en.id) ? "border-red bg-red/15 text-red" : "border-line2 text-cream-base hover:bg-white/[0.05]")}>
+                  {en.label}
+                </button>
+              ))}
+              {newEngines.map((nm, i) => (
+                <button key={"new" + i} onClick={() => setNewEngines((x) => x.filter((_, j) => j !== i))}
+                  className="rounded-full border border-red bg-red/15 px-3 py-1 text-xs text-red">
+                  {nm} (new) ×
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <Input value={engineDraft} onChange={(e) => setEngineDraft(e.target.value)} placeholder="New engine name"
+                onKeyDown={(e) => { if (e.key === "Enter" && engineDraft.trim()) { setNewEngines((x) => [...x, engineDraft.trim()]); setEngineDraft(""); } }} />
+              <Button variant="subtle" size="md" onClick={() => { if (engineDraft.trim()) { setNewEngines((x) => [...x, engineDraft.trim()]); setEngineDraft(""); } }}>
+                <Plus className="h-4 w-4" /> Add
+              </Button>
+            </div>
+          </div>
+
+          {/* tasks */}
+          <div>
+            <Eyebrow>/ 3. TASKS THEY WILL RUN</Eyebrow>
+            <p className="mt-1 text-xs text-dim">These land on the board as rocks and on the role in the hiring room.</p>
+            <div className="mt-2 space-y-2">
+              {tasks.map((t, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input value={t} placeholder="One concrete task"
+                    onChange={(e) => setTasks((x) => x.map((v, j) => (j === i ? e.target.value : v)))} />
+                  <Button variant="ghost" size="icon" onClick={() => setTasks((x) => x.filter((_, j) => j !== i))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="subtle" size="sm" onClick={() => setTasks((x) => [...x, ""])}><Plus className="h-4 w-4" /> Add task</Button>
+            </div>
+          </div>
+        </div>
+
+        {err ? <p className="mt-3 text-sm text-red">{err}</p> : null}
+        <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
+          <p className="text-xs text-dim">The board layout publishes when you press Save.</p>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button disabled={busy} onClick={deploy}><UserPlus className="h-4 w-4" /> {busy ? "Deploying." : "Deploy human"}</Button>
+          </div>
+        </div>
       </div>
     </div>
   );

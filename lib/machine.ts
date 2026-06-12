@@ -13,6 +13,8 @@ export interface MachineNode {
   sub?: string;          // person: role context; engine: short note
   state?: string;        // person: "needed" | "hired"; task: "todo" | "done"
   endpointKind?: string; // one of ENDPOINT_KINDS keys
+  positionId?: string;   // person: linked hiring-room position id
+  positionRef?: string;  // template only: position slug, resolved to positionId at seed time
 }
 export interface MachineEdge { id: string; from: string; to: string }
 export interface BoardData { nodes: MachineNode[]; edges: MachineEdge[] }
@@ -44,12 +46,12 @@ const e = (from: string, to: string): MachineEdge => ({ id: `${from}->${to}`, fr
 // Reads left to right. Fully editable; this is just the starting layout.
 export const TEMPLATE_BOARD: BoardData = {
   nodes: [
-    // people (left column)
-    n("p-ops", "person", 80, 120, "Marketing Ops", { sub: "Coordinator", state: "needed" }),
-    n("p-social", "person", 80, 300, "Social Specialist", { sub: "Organic social", state: "needed" }),
-    n("p-sr-design", "person", 80, 480, "Senior Designer", { sub: "Visual standard", state: "needed" }),
-    n("p-jr-design", "person", 80, 660, "Junior Designer", { sub: "Production volume", state: "needed" }),
-    n("p-video", "person", 80, 840, "Video Editor", { sub: "Short form", state: "needed" }),
+    // people (left column), linked to the hiring room by slug
+    n("p-ops", "person", 80, 120, "Marketing Ops", { sub: "Coordinator", state: "needed", positionRef: "marketing-operations-coordinator" }),
+    n("p-social", "person", 80, 300, "Social Specialist", { sub: "Organic social", state: "needed", positionRef: "social-media-specialist" }),
+    n("p-sr-design", "person", 80, 480, "Senior Designer", { sub: "Visual standard", state: "needed", positionRef: "senior-graphic-designer" }),
+    n("p-jr-design", "person", 80, 660, "Junior Designer", { sub: "Production volume", state: "needed", positionRef: "junior-graphic-designer" }),
+    n("p-video", "person", 80, 840, "Video Editor", { sub: "Short form", state: "needed", positionRef: "video-editor" }),
     n("p-richard", "person", 80, 1020, "Richard", { sub: "Runs the system", state: "hired" }),
 
     // engines (middle)

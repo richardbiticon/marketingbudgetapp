@@ -1,21 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { machineBoards } from "@/lib/schema";
+import { machineBoards, rebuildPositions } from "@/lib/schema";
 import { actorFrom } from "@/lib/activity";
-import { TEMPLATE_BOARD } from "@/lib/machine";
+import { TEMPLATE_BOARD, type BoardData } from "@/lib/machine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// One default board for now. First GET seeds it with the template so the
-// map is never empty. The canvas edits locally; Save does the PUT.
+async function positionIdsBySlug() {
+  const db = getDb();
+  const positions = await db.select().from(rebuildPositions);
+  return new Map(positions.map((p) => [p.slug, p.id]));
+}
+
+function linkTemplateNodes(nodes: BoardData["nodes"], bySlug: Map<string, string>) {
+  // Template node id -> hiring-room slug, so boards saved before linking
+  // existed can be healed in place without touching layout.
+  const refByTemplateId = new Map(
+    TEMPLATE_BOARD.nodes.filter((n) => n.positionRef).map((n) => [n.id, n.positionRef!])
+  );
+  let changed = false;
+  const out = nodes.map((n) => {
+    const ref = n.positionRef ?? refByTemplateId.get(n.id);
+    if (n.type === "person" && !n.positionId && ref && bySlug.has(ref)) {
+      changed = true;
+      const { positionRef, ...rest } = n;
+      return { ...rest, positionId: bySlug.get(ref)! };
+    }
+    return n;
+  });
+  return { out, changed };
+}
+
+// One default board for now. First GET seeds it with the template (person
+// nodes linked to hiring-room positions by slug). Existing boards self-heal:
+// unlinked template people get their positionId added in place. The canvas
+// edits locally; Save does the PUT.
 async function ensureBoard() {
   const db = getDb();
   const rows = await db.select().from(machineBoards).limit(1);
-  if (rows.length) return rows[0];
+  if (rows.length) {
+    const row = rows[0];
+    const data = row.data as BoardData;
+    if (Array.isArray(data?.nodes)) {
+      const { out, changed } = linkTemplateNodes(data.nodes, await positionIdsBySlug());
+      if (changed) {
+        const [updated] = await db.update(machineBoards)
+          .set({ data: { ...data, nodes: out }, updatedAt: new Date() })
+          .where(eq(machineBoards.id, row.id))
+          .returning();
+        return updated;
+      }
+    }
+    return row;
+  }
+
+  const bySlug = await positionIdsBySlug();
+  const { out } = linkTemplateNodes(TEMPLATE_BOARD.nodes, bySlug);
+  const data: BoardData = { ...TEMPLATE_BOARD, nodes: out };
   const [row] = await db.insert(machineBoards)
-    .values({ name: "The Machine", data: TEMPLATE_BOARD, updatedBy: "Template" })
+    .values({ name: "The Machine", data, updatedBy: "Template" })
     .returning();
   return row;
 }
