@@ -1,0 +1,137 @@
+[
+  {
+    "slug": "marketing-operations-coordinator",
+    "title": "Marketing Operations Coordinator",
+    "status": "active",
+    "mandate": "Owns the marketing calendar end to end so nothing ships late and nothing ships unreviewed.",
+    "tasks_now": [
+      "Run the email and social calendar in the Marketing OS daily",
+      "Chase approvals and assets so every send hits its date",
+      "Keep the budget tracker current with every new expense",
+      "Prepare the weekly status: what shipped, what slipped, and why"
+    ],
+    "tasks_later": [
+      "Own vendor and tool renewals",
+      "Build the monthly reporting pack from Klaviyo, Meta, and Google",
+      "Coordinate the recruiting engine: posts, trackers, and interview scheduling"
+    ],
+    "kpis": [
+      { "label": "On-time send rate", "target": "95% or better" },
+      { "label": "Calendar coverage", "target": "Every send planned 2 weeks out" },
+      { "label": "Budget freshness", "target": "No expense older than 3 days unlogged" }
+    ],
+    "pay_min": 900,
+    "pay_max": 1300,
+    "pay_ramp_note": "$1,500 at 90-day goals",
+    "cadence": "Daily calendar pass, weekly status doc, monthly reporting pack.",
+    "budget_note": "Replaces founder hours spent on coordination. First hire for a reason."
+  },
+  {
+    "slug": "social-media-specialist",
+    "title": "Social Media Specialist",
+    "status": "active",
+    "mandate": "Owns the organic social engine: plans it, posts it, and answers every real comment.",
+    "tasks_now": [
+      "Plan and publish the social calendar across all pillars",
+      "Write captions that pass the discipline scan on the first try",
+      "Engage with real replies, never emoji stacks",
+      "Repost tournament and UGC content on weekends"
+    ],
+    "tasks_later": [
+      "Run creator partnerships and UGC sourcing",
+      "Own short-form video scripting with the Video Editor",
+      "Build the club spotlight series into a weekly fixture"
+    ],
+    "kpis": [
+      { "label": "Posting consistency", "target": "7 feed posts per week" },
+      { "label": "Engagement", "target": "Reply to every comment within 24 hours" },
+      { "label": "Pillar balance", "target": "All 7 pillars hit each week" }
+    ],
+    "pay_min": 800,
+    "pay_max": 1200,
+    "pay_ramp_note": "$1,400 at 90-day goals",
+    "cadence": "Daily posting and engagement, weekly content plan, monthly pillar review.",
+    "budget_note": "Replaces agency retainer conversations entirely."
+  },
+  {
+    "slug": "senior-graphic-designer",
+    "title": "Senior Graphic Designer",
+    "status": "active",
+    "mandate": "Owns the visual standard: every asset that ships looks like the brand on its best day.",
+    "tasks_now": [
+      "Design email headers, social graphics, and landing page sections",
+      "Keep the brand system tight: type, color, and spacing discipline",
+      "Review and correct Junior Designer output before it ships",
+      "Build templates so common assets take minutes, not days"
+    ],
+    "tasks_later": [
+      "Own the lookbook and seasonal catalog design",
+      "Art-direct photo shoots and UGC selects",
+      "Build the motion-design starter kit with the Video Editor"
+    ],
+    "kpis": [
+      { "label": "Asset turnaround", "target": "Standard assets within 48 hours" },
+      { "label": "Revision rounds", "target": "Average under 2 per asset" },
+      { "label": "Template coverage", "target": "Top 10 recurring assets templated" }
+    ],
+    "pay_min": 1200,
+    "pay_max": 1800,
+    "pay_ramp_note": "$2,000 at 90-day goals",
+    "cadence": "Daily asset queue, weekly design review, monthly brand audit.",
+    "budget_note": "The quality anchor. Paid test task is mandatory for this role."
+  },
+  {
+    "slug": "junior-graphic-designer",
+    "title": "Junior Graphic Designer",
+    "status": "active",
+    "mandate": "Owns production volume: resizes, variants, and the daily asset queue, fast and clean.",
+    "tasks_now": [
+      "Produce sized variants for every channel from senior-approved masters",
+      "Build social graphics from templates",
+      "Keep the asset library organized and named correctly",
+      "Turn around small requests same week"
+    ],
+    "tasks_later": [
+      "Take ownership of recurring asset families",
+      "Learn motion basics for simple animated posts",
+      "Grow into independent design work under review"
+    ],
+    "kpis": [
+      { "label": "Daily throughput", "target": "8 or more production assets per day" },
+      { "label": "Error rate", "target": "Under 5% returned for correction" },
+      { "label": "Library hygiene", "target": "Zero unnamed files at week end" }
+    ],
+    "pay_min": 500,
+    "pay_max": 800,
+    "pay_ramp_note": "$950 at 90-day goals",
+    "cadence": "Daily queue, weekly review with Senior Designer.",
+    "budget_note": "Volume play. Free test task under 2 hours is acceptable here."
+  },
+  {
+    "slug": "video-editor",
+    "title": "Video Editor",
+    "status": "active",
+    "mandate": "Owns short-form video output: reels, cutdowns, and event recaps that actually get watched.",
+    "tasks_now": [
+      "Edit 3 to 5 short-form videos per week from raw footage and UGC",
+      "Cut tournament and event recaps within 48 hours of receiving footage",
+      "Caption everything; most viewers watch muted",
+      "Maintain the b-roll and footage library"
+    ],
+    "tasks_later": [
+      "Own a weekly video series end to end",
+      "Build motion graphics templates with the Senior Designer",
+      "Edit longer-form content for YouTube"
+    ],
+    "kpis": [
+      { "label": "Weekly output", "target": "3 to 5 published videos" },
+      { "label": "Recap speed", "target": "Event recaps within 48 hours" },
+      { "label": "Caption coverage", "target": "100% of published video" }
+    ],
+    "pay_min": 700,
+    "pay_max": 1100,
+    "pay_ramp_note": "$1,300 at 90-day goals",
+    "cadence": "Weekly output quota, monthly series review.",
+    "budget_note": "Paid test: one edit from our raw footage, paid at a fixed rate."
+  }
+]

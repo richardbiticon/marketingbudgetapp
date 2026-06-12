@@ -6,6 +6,7 @@ import {
   numeric,
   timestamp,
   pgEnum,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const channelEnum = pgEnum("channel", [
@@ -128,6 +129,76 @@ export const inboundEmails = pgTable("inbound_emails", {
   html: text("html").notNull(),
   matchedEmailId: uuid("matched_email_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- MMC Rebuild: hiring engine ----
+export const rebuildPositions = pgTable("rebuild_positions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull(),
+  title: text("title").notNull(),
+  status: text("status").notNull().default("draft"), // draft|active|paused|filled|archived
+  mandate: text("mandate"),
+  tasksNow: jsonb("tasks_now").$type<string[]>().notNull().default([]),
+  tasksLater: jsonb("tasks_later").$type<string[]>().notNull().default([]),
+  kpis: jsonb("kpis").$type<{ label: string; target: string }[]>().notNull().default([]),
+  payMin: integer("pay_min"),
+  payMax: integer("pay_max"),
+  payRampNote: text("pay_ramp_note"),
+  cadence: text("cadence"),
+  budgetNote: text("budget_note"),
+  jobPost: text("job_post"),
+  trackerUrl: text("tracker_url"),
+  activatedAt: timestamp("activated_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: text("updated_by").notNull().default("Someone"),
+});
+
+export const rebuildCandidates = pgTable("rebuild_candidates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  positionId: uuid("position_id"),
+  name: text("name").notNull(),
+  email: text("email"),
+  location: text("location"),
+  expectedSalary: integer("expected_salary"),
+  portfolioUrl: text("portfolio_url"),
+  oljProfileUrl: text("olj_profile_url"),
+  resumeUrl: text("resume_url"),
+  stage: text("stage").notNull().default("applied"), // applied|interview|trial_paid|trial_free|offer|hired|bench|rejected
+  scores: jsonb("scores").$type<{ skill?: number; ai_fluency?: number; hunger?: number; comms?: number }>(),
+  profile: jsonb("profile"),
+  sourcePdfUrl: text("source_pdf_url"),
+  source: text("source").notNull().default("manual"), // manual|csv|pdf
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: text("updated_by").notNull().default("Someone"),
+});
+
+export const rebuildEvents = pgTable("rebuild_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  positionId: uuid("position_id"),
+  candidateId: uuid("candidate_id"),
+  type: text("type").notNull(),
+  payload: jsonb("payload"),
+  actor: text("actor").notNull().default("Someone"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const rebuildImports = pgTable("rebuild_imports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  positionId: uuid("position_id").notNull(),
+  filename: text("filename").notNull(),
+  rowCount: integer("row_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  actor: text("actor").notNull().default("Someone"),
+});
+
+export const rebuildGuideline = pgTable("rebuild_guideline", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  content: text("content").notNull().default(""),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: text("updated_by").notNull().default("Someone"),
 });
 
 export type Expense = typeof expenses.$inferSelect;

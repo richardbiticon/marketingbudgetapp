@@ -1360,6 +1360,8 @@
       glance: function () { return "EMAIL + SOCIAL CALENDAR"; } },
     { key: "promos", title: "Promos", label: "PROMOS", color: "red", icon: "promos", render: viewPromos },
     { key: "budget", title: "Budget", label: "BUDGET", color: "ink", icon: "budget", href: "/budget" },
+    { key: "rebuild", title: "MMC Rebuild", label: "REBUILD", color: "red", icon: "accounts", href: "/rebuild",
+      glance: function () { return "HIRING. GATED"; } },
     { key: "automation", title: "Automation", label: "AUTOMATION", color: "cream", icon: "automation", render: viewAutomation },
     { key: "content", title: "Content", label: "CONTENT", color: "cream", icon: "content", render: viewContent },
   ];

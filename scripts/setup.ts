@@ -103,6 +103,70 @@ const tables = [
     "matched_email_id" uuid,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS "rebuild_positions" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "slug" text NOT NULL,
+    "title" text NOT NULL,
+    "status" text DEFAULT 'draft' NOT NULL,
+    "mandate" text,
+    "tasks_now" jsonb DEFAULT '[]' NOT NULL,
+    "tasks_later" jsonb DEFAULT '[]' NOT NULL,
+    "kpis" jsonb DEFAULT '[]' NOT NULL,
+    "pay_min" integer,
+    "pay_max" integer,
+    "pay_ramp_note" text,
+    "cadence" text,
+    "budget_note" text,
+    "job_post" text,
+    "tracker_url" text,
+    "activated_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_by" text DEFAULT 'Someone' NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "rebuild_candidates" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "position_id" uuid,
+    "name" text NOT NULL,
+    "email" text,
+    "location" text,
+    "expected_salary" integer,
+    "portfolio_url" text,
+    "olj_profile_url" text,
+    "resume_url" text,
+    "stage" text DEFAULT 'applied' NOT NULL,
+    "scores" jsonb,
+    "profile" jsonb,
+    "source_pdf_url" text,
+    "source" text DEFAULT 'manual' NOT NULL,
+    "notes" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_by" text DEFAULT 'Someone' NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "rebuild_events" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "position_id" uuid,
+    "candidate_id" uuid,
+    "type" text NOT NULL,
+    "payload" jsonb,
+    "actor" text DEFAULT 'Someone' NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "rebuild_imports" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "position_id" uuid NOT NULL,
+    "filename" text NOT NULL,
+    "row_count" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "actor" text DEFAULT 'Someone' NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS "rebuild_guideline" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    "content" text DEFAULT '' NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_by" text DEFAULT 'Someone' NOT NULL
+  )`,
 ];
 
 async function main() {
