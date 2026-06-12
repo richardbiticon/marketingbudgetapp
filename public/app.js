@@ -1360,8 +1360,8 @@
       glance: function () { return "EMAIL + SOCIAL CALENDAR"; } },
     { key: "promos", title: "Promos", label: "PROMOS", color: "red", icon: "promos", render: viewPromos },
     { key: "budget", title: "Budget", label: "BUDGET", color: "ink", icon: "budget", href: "/budget" },
-    { key: "rebuild", title: "MMC Rebuild", label: "REBUILD", color: "red", icon: "accounts", href: "/rebuild",
-      glance: function () { return "HIRING. GATED"; } },
+    { key: "rebuild", title: "Hidden", label: "HIDDEN", color: "ink", icon: "lock", href: "/rebuild",
+      glance: function () { return "PRIVATE"; } },
     { key: "automation", title: "Automation", label: "AUTOMATION", color: "cream", icon: "automation", render: viewAutomation },
     { key: "content", title: "Content", label: "CONTENT", color: "cream", icon: "content", render: viewContent },
   ];
@@ -1382,6 +1382,7 @@
       budget: '<path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="8"/><rect x="10.5" y="6" width="3.5" height="13"/><rect x="16" y="14" width="3.5" height="5"/>',
       automation: '<path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/>',
       content: '<rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-4 4 3 3-2 4 3"/>',
+      lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
       home: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
       back: '<path d="M15 18l-6-6 6-6"/>',
     };
