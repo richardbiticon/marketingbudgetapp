@@ -65,7 +65,7 @@ export default function PositionEntityPage() {
   ];
 
   if (!position) {
-    return <main><RebuildShell eyebrow="MMC REBUILD" title="Loading."><p className="text-sm text-dim">Pulling the position.</p></RebuildShell></main>;
+    return <main><RebuildShell eyebrow="THE REBUILD" title="Loading."><p className="text-sm text-dim">Pulling the position.</p></RebuildShell></main>;
   }
 
   return (

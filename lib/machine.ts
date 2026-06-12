@@ -42,17 +42,29 @@ const n = (
 ): MachineNode => ({ id, type, x, y, label, ...extra });
 const e = (from: string, to: string): MachineEdge => ({ id: `${from}->${to}`, from, to });
 
+// The core team the rebuild is built around. Hired, on the board from day one.
+export const CORE_TEAM: MachineNode[] = [
+  n("p-andrew", "person", 80, 120, "Andrew", { sub: "Head of E-com & Marketing", state: "hired" }),
+  n("p-richard", "person", 80, 300, "Richard", { sub: "Digital Marketing Manager", state: "hired" }),
+  n("p-jericho", "person", 80, 480, "Jericho", { sub: "Web & Shop Expert", state: "hired" }),
+];
+export const CORE_EDGES: MachineEdge[] = [
+  e("p-andrew", "en-paid"), e("p-andrew", "en-site"),
+  e("p-richard", "en-email"), e("p-richard", "en-social"),
+  e("p-jericho", "en-site"),
+];
+
 // The seeded map: people power engines, engines drive the five endpoints.
 // Reads left to right. Fully editable; this is just the starting layout.
 export const TEMPLATE_BOARD: BoardData = {
   nodes: [
-    // people (left column), linked to the hiring room by slug
-    n("p-ops", "person", 80, 120, "Marketing Ops", { sub: "Coordinator", state: "needed", positionRef: "marketing-operations-coordinator" }),
-    n("p-social", "person", 80, 300, "Social Specialist", { sub: "Organic social", state: "needed", positionRef: "social-media-specialist" }),
-    n("p-sr-design", "person", 80, 480, "Senior Designer", { sub: "Visual standard", state: "needed", positionRef: "senior-graphic-designer" }),
-    n("p-jr-design", "person", 80, 660, "Junior Designer", { sub: "Production volume", state: "needed", positionRef: "junior-graphic-designer" }),
-    n("p-video", "person", 80, 840, "Video Editor", { sub: "Short form", state: "needed", positionRef: "video-editor" }),
-    n("p-richard", "person", 80, 1020, "Richard", { sub: "Runs the system", state: "hired" }),
+    // the core team first, then the roles being rebuilt around them
+    ...CORE_TEAM,
+    n("p-ops", "person", 80, 680, "Marketing Ops", { sub: "Coordinator", state: "needed", positionRef: "marketing-operations-coordinator" }),
+    n("p-social", "person", 80, 860, "Social Specialist", { sub: "Organic social", state: "needed", positionRef: "social-media-specialist" }),
+    n("p-sr-design", "person", 80, 1040, "Senior Designer", { sub: "Visual standard", state: "needed", positionRef: "senior-graphic-designer" }),
+    n("p-jr-design", "person", 80, 1220, "Junior Designer", { sub: "Production volume", state: "needed", positionRef: "junior-graphic-designer" }),
+    n("p-video", "person", 80, 1400, "Video Editor", { sub: "Short form", state: "needed", positionRef: "video-editor" }),
 
     // engines (middle)
     n("en-email", "engine", 560, 140, "Email engine", { sub: "Klaviyo and Redo sends" }),
@@ -78,12 +90,12 @@ export const TEMPLATE_BOARD: BoardData = {
   ],
   edges: [
     // people -> engines
+    ...CORE_EDGES,
     e("p-ops", "en-email"), e("p-ops", "en-paid"),
     e("p-social", "en-social"),
     e("p-sr-design", "en-site"), e("p-sr-design", "en-email"),
     e("p-jr-design", "en-social"),
     e("p-video", "en-social"), e("p-video", "en-paid"),
-    e("p-richard", "en-paid"), e("p-richard", "en-site"),
     // tasks -> engines
     e("t-june", "en-email"), e("t-cal", "en-social"),
     e("t-lp", "en-site"), e("t-look", "en-site"),

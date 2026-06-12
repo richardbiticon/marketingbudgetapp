@@ -1362,8 +1362,8 @@
       glance: function () { return "EMAIL + SOCIAL CALENDAR"; } },
     { key: "promos", title: "Promos", label: "PROMOS", color: "red", icon: "promos", render: viewPromos },
     { key: "budget", title: "Budget", label: "BUDGET", color: "ink", icon: "budget", href: "/budget" },
-    { key: "rebuild", title: "Hidden", label: "HIDDEN", color: "ink", icon: "lock", href: "/rebuild",
-      glance: function () { return "PRIVATE"; } },
+    { key: "rebuild", title: "The Rebuild", label: "REBUILD", color: "ink", icon: "lock", href: "/rebuild",
+      glance: function () { return "TEAM BUILD"; } },
     { key: "automation", title: "Automation", label: "AUTOMATION", color: "cream", icon: "automation", render: viewAutomation },
     { key: "content", title: "Content", label: "CONTENT", color: "cream", icon: "content", render: viewContent },
   ];

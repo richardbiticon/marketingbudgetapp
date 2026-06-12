@@ -13,7 +13,7 @@ export default function PositionsIndex() {
   const latest = positions[0];
   return (
     <main>
-      <RebuildShell eyebrow="MMC REBUILD" title="Positions"
+      <RebuildShell eyebrow="THE REBUILD" title="Positions"
         updated={latest ? { at: latest.updatedAt, by: latest.updatedBy } : null}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {positions.map((p, i) => (

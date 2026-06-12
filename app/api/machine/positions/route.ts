@@ -6,9 +6,9 @@ import { rebuildPositions, rebuildCandidates } from "@/lib/schema";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Minimal open list so the board can show live role status and applicant
-// counts on person sprites. Titles and counts only; the hiring room itself
-// stays behind the gate.
+// Open list so the board can show live role status, applicant counts, and
+// the character-sheet detail (mandate, current tasks). Candidate identities
+// and pay stay behind the Rebuild gate.
 export async function GET() {
   try {
     const db = getDb();
@@ -22,6 +22,8 @@ export async function GET() {
       positions: rows.map((p) => ({
         id: p.id, title: p.title, status: p.status,
         applicantCount: countMap.get(p.id) ?? 0,
+        mandate: p.mandate,
+        tasksNow: (p.tasksNow as string[]) ?? [],
       })),
     });
   } catch (e: any) {

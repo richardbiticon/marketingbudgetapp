@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft, Save, Link2, Trash2, ZoomIn, ZoomOut, Maximize2, Plus,
   ClipboardList, Phone, ShoppingCart, Mail, PhoneCall, HelpCircle, X, UserPlus,
+  ExternalLink,
 } from "lucide-react";
 import { Identity } from "../Identity";
 import { ThemeToggle } from "../ThemeToggle";
@@ -22,7 +23,10 @@ import { cn } from "@/lib/utils";
 const WORLD = { w: 3000, h: 1600 };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
 
-interface PositionLite { id: string; title: string; status: string; applicantCount: number }
+interface PositionLite {
+  id: string; title: string; status: string; applicantCount: number;
+  mandate?: string | null; tasksNow?: string[];
+}
 
 const ENDPOINT_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   contact_form: ClipboardList, call: Phone, purchase: ShoppingCart, email_us: Mail, call_form: PhoneCall,
@@ -101,6 +105,7 @@ export function MachineBoard() {
   const [portalPicker, setPortalPicker] = React.useState(false);
   const [legend, setLegend] = React.useState(false);
   const [spawnOpen, setSpawnOpen] = React.useState(false);
+  const [sheetId, setSheetId] = React.useState<string | null>(null);
   const [saveState, setSaveState] = React.useState<"idle" | "saving" | "saved">("idle");
   const [banner, setBanner] = React.useState<{ kind: "stale" | "conflict"; by: string } | null>(null);
 
@@ -243,14 +248,19 @@ export function MachineBoard() {
   function onPointerUp() {
     const d = drag.current;
     if (d?.mode === "node" && d.moved) setDirty(true);
-    if (d?.mode === "pan" && !d.moved) { setSelected(null); setSelectedEdge(null); setLinking(null); setPortalPicker(false); }
+    if (d?.mode === "node" && !d.moved && d.id) {
+      // a clean click on a human opens their character sheet
+      const n = nodeMap.get(d.id);
+      if (n?.type === "person") { setSheetId(d.id); setSelected(null); }
+    }
+    if (d?.mode === "pan" && !d.moved) { setSelected(null); setSelectedEdge(null); setLinking(null); setPortalPicker(false); setSheetId(null); }
     drag.current = null;
   }
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (e.key === "Escape") { setPlacing(null); setGhost(null); setLinking(null); setPortalPicker(false); setSpawnOpen(false); }
+      if (e.key === "Escape") { setPlacing(null); setGhost(null); setLinking(null); setPortalPicker(false); setSpawnOpen(false); setSheetId(null); }
       if (e.key === "Delete" || e.key === "Backspace") {
         if (selected) {
           mutate((b) => ({
@@ -368,6 +378,7 @@ export function MachineBoard() {
   }
 
   const sel = selected ? nodeMap.get(selected) : null;
+  const sheetNode = sheetId ? nodeMap.get(sheetId) : null;
   const counts = {
     people: board.nodes.filter((n) => n.type === "person").length,
     toHire: board.nodes.filter((n) => n.type === "person" && n.state !== "hired").length,
@@ -661,7 +672,7 @@ export function MachineBoard() {
             </div>
             <ul className="mt-3 space-y-2.5 text-sm text-cream-base/90">
               <li className="flex gap-2.5"><span className="shrink-0 text-cream-light"><PersonSprite hired={false} /></span>
-                A human who runs part of the machine. Spawning one opens the role in the hiring room and shows live applicant counts here.</li>
+                A human who runs part of the machine. Spawning one opens the role in The Rebuild and shows live applicant counts here. Click any human to open their character sheet.</li>
               <li className="flex items-center gap-2.5"><span className="shrink-0 text-cream-light"><EngineSprite /></span>
                 An engine: a marketing effort that runs on a cadence.</li>
               <li className="flex items-center gap-2.5"><span className="shrink-0 text-cream-light"><RockSprite done={false} /></span>
@@ -688,6 +699,158 @@ export function MachineBoard() {
             onDeploy={async (input) => { await deployHuman(input); setSpawnOpen(false); }}
           />
         ) : null}
+
+        {sheetNode ? (
+          <CharacterSheet
+            node={sheetNode}
+            pos={sheetNode.positionId ? posById.get(sheetNode.positionId) ?? null : null}
+            engines={board.edges
+              .filter((x) => x.from === sheetNode.id)
+              .map((x) => nodeMap.get(x.to))
+              .filter((n): n is MachineNode => !!n && n.type === "engine")}
+            onRename={(label) => mutate((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === sheetNode.id ? { ...n, label } : n)) }))}
+            onSub={(sub) => mutate((b) => ({ ...b, nodes: b.nodes.map((n) => (n.id === sheetNode.id ? { ...n, sub } : n)) }))}
+            onToggleHired={() => toggleHired(sheetNode)}
+            onLink={() => { setLinking(sheetNode.id); setSheetId(null); }}
+            onDelete={() => {
+              mutate((b) => ({
+                nodes: b.nodes.filter((n) => n.id !== sheetNode.id),
+                edges: b.edges.filter((x) => x.from !== sheetNode.id && x.to !== sheetNode.id),
+              }));
+              setSheetId(null);
+            }}
+            onClose={() => setSheetId(null)}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- character sheet: click a human, see the hire ---------- */
+function CharacterSheet({
+  node, pos, engines, onRename, onSub, onToggleHired, onLink, onDelete, onClose,
+}: {
+  node: MachineNode;
+  pos: PositionLite | null;
+  engines: MachineNode[];
+  onRename: (label: string) => void;
+  onSub: (sub: string) => void;
+  onToggleHired: () => void;
+  onLink: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const hired = node.state === "hired";
+  const tasks = pos?.tasksNow ?? [];
+  return (
+    <div
+      className="absolute right-0 top-0 z-40 flex h-full w-full max-w-md flex-col border-l border-line2 bg-ink-raised/95 shadow-[-30px_0_80px_rgba(0,0,0,.5)] backdrop-blur"
+      style={{ animation: "fade-in .25s cubic-bezier(.2,.7,.2,1)" }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-start justify-between border-b border-line px-6 py-5">
+        <div className="flex items-center gap-4">
+          <span className={cn("grid h-20 w-16 place-items-center rounded-2xl border",
+            hired ? "border-[#57c47b]/40 bg-[#57c47b]/10" : "border-red/40 bg-red/10")}>
+            <span className="text-cream-light"><PersonSprite hired={hired} /></span>
+          </span>
+          <div>
+            <Eyebrow>/ {hired ? "ON THE TEAM" : "BUILDING THIS HIRE"}</Eyebrow>
+            <input
+              value={node.label}
+              onChange={(e) => onRename(e.target.value)}
+              className="mt-1 w-full bg-transparent text-xl font-bold tracking-tight text-cream-light focus:outline-none"
+            />
+            <input
+              value={node.sub ?? ""}
+              placeholder="Role subtitle"
+              onChange={(e) => onSub(e.target.value)}
+              className="w-full bg-transparent font-mono text-[11px] uppercase tracking-wider text-dim focus:outline-none"
+            />
+          </div>
+        </div>
+        <button onClick={onClose} className="text-dim hover:text-cream-light"><X className="h-5 w-5" /></button>
+      </div>
+
+      <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+        {/* live role stats */}
+        {pos ? (
+          <div>
+            <Eyebrow>/ THE REBUILD STATUS</Eyebrow>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-line bg-ink-panel p-3">
+                <p className="text-2xl font-bold tabular-nums text-cream-light">{pos.applicantCount}</p>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-dim">Applicants</p>
+              </div>
+              <div className="rounded-xl border border-line bg-ink-panel p-3">
+                <p className={cn("text-2xl font-bold capitalize",
+                  pos.status === "filled" ? "text-[#57c47b]" : pos.status === "active" ? "text-red" : "text-cream-light")}>
+                  {pos.status}
+                </p>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-dim">Role status</p>
+              </div>
+            </div>
+            {pos.mandate ? (
+              <p className="mt-3 rounded-xl border border-line bg-ink-panel p-3 text-sm leading-relaxed text-cream-base/90">
+                {pos.mandate}
+              </p>
+            ) : null}
+            <a href={`/rebuild/positions/${pos.id}`}
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-red/50 bg-red/10 px-4 py-2.5 text-sm font-semibold text-red transition-colors hover:bg-red/20">
+              <ExternalLink className="h-4 w-4" /> Open in The Rebuild
+            </a>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-line bg-ink-panel p-3 text-sm text-dim">
+            {hired
+              ? "Core team. Not a role being recruited; this person runs part of the machine today."
+              : "Not linked to a role in The Rebuild yet. Spawn humans from the palette to create linked roles."}
+          </p>
+        )}
+
+        {/* what they run */}
+        <div>
+          <Eyebrow>/ ENGINES THEY POWER</Eyebrow>
+          {engines.length ? (
+            <ul className="mt-2 space-y-1.5">
+              {engines.map((en) => (
+                <li key={en.id} className="flex items-center gap-3 rounded-xl border border-line bg-ink-panel px-3 py-2">
+                  <span className="shrink-0 scale-75 text-cream-light"><EngineSprite /></span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-cream-light">{en.label}</span>
+                    {en.sub ? <span className="block truncate font-mono text-[9px] uppercase tracking-wider text-dim">{en.sub}</span> : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-dim">Nothing wired yet. Use Link to connect them to an engine.</p>
+          )}
+        </div>
+
+        {/* their tasks from the rebuild room */}
+        {tasks.length ? (
+          <div>
+            <Eyebrow>/ TASKS ON THEIR PLATE</Eyebrow>
+            <ul className="mt-2 space-y-1.5">
+              {tasks.map((t, i) => (
+                <li key={i} className="flex items-start gap-2.5 rounded-xl border border-line bg-ink-panel px-3 py-2 text-sm text-cream-base/90">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red" /> {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex items-center gap-2 border-t border-line px-6 py-4">
+        <Button size="sm" variant={hired ? "subtle" : "primary"} onClick={onToggleHired}>
+          {hired ? "Mark to hire" : "Mark hired"}
+        </Button>
+        <Button size="sm" variant="subtle" onClick={onLink}><Link2 className="h-4 w-4" /> Link</Button>
+        <span className="flex-1" />
+        <Button size="sm" variant="danger" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
       </div>
     </div>
   );
@@ -770,7 +933,7 @@ function SpawnModal({
               ) : (
                 <div>
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Role title, e.g. Email Marketing Specialist" autoFocus />
-                  <p className="mt-1.5 text-xs text-dim">Deploy creates this role in the hiring room right away.</p>
+                  <p className="mt-1.5 text-xs text-dim">Deploy creates this role in The Rebuild right away.</p>
                 </div>
               )}
             </div>
@@ -807,7 +970,7 @@ function SpawnModal({
           {/* tasks */}
           <div>
             <Eyebrow>/ 3. TASKS THEY WILL RUN</Eyebrow>
-            <p className="mt-1 text-xs text-dim">These land on the board as rocks and on the role in the hiring room.</p>
+            <p className="mt-1 text-xs text-dim">These land on the board as rocks and on the role in The Rebuild.</p>
             <div className="mt-2 space-y-2">
               {tasks.map((t, i) => (
                 <div key={i} className="flex gap-2">

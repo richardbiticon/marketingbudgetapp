@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { machineBoards, rebuildPositions } from "@/lib/schema";
 import { actorFrom } from "@/lib/activity";
-import { TEMPLATE_BOARD, type BoardData } from "@/lib/machine";
+import { TEMPLATE_BOARD, CORE_TEAM, CORE_EDGES, type BoardData } from "@/lib/machine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,10 +33,42 @@ function linkTemplateNodes(nodes: BoardData["nodes"], bySlug: Map<string, string
   return { out, changed };
 }
 
+// Boards saved before the core team existed get Andrew / Richard / Jericho
+// added in place, stacked under the lowest person so no layout is disturbed.
+function addCoreTeam(data: BoardData): { data: BoardData; changed: boolean } {
+  let changed = false;
+  const nodes = [...data.nodes];
+  const edges = [...data.edges];
+  const have = new Set(nodes.map((n) => n.id));
+  let nextY = Math.max(120, ...nodes.filter((n) => n.type === "person").map((n) => n.y + 180));
+
+  for (const core of CORE_TEAM) {
+    if (core.id === "p-richard" && have.has("p-richard")) {
+      // upgrade the old lone Richard node to his real title
+      const i = nodes.findIndex((n) => n.id === "p-richard");
+      if (nodes[i].sub === "Runs the system") {
+        nodes[i] = { ...nodes[i], sub: core.sub };
+        changed = true;
+      }
+      continue;
+    }
+    if (have.has(core.id)) continue;
+    nodes.push({ ...core, y: nextY });
+    nextY += 180;
+    changed = true;
+    for (const ce of CORE_EDGES) {
+      if (ce.from === core.id && have.has(ce.to) && !edges.some((x) => x.id === ce.id)) {
+        edges.push(ce);
+      }
+    }
+  }
+  return { data: { nodes, edges }, changed };
+}
+
 // One default board for now. First GET seeds it with the template (person
 // nodes linked to hiring-room positions by slug). Existing boards self-heal:
-// unlinked template people get their positionId added in place. The canvas
-// edits locally; Save does the PUT.
+// unlinked template people get their positionId added in place and the core
+// team appears if missing. The canvas edits locally; Save does the PUT.
 async function ensureBoard() {
   const db = getDb();
   const rows = await db.select().from(machineBoards).limit(1);
@@ -44,10 +76,11 @@ async function ensureBoard() {
     const row = rows[0];
     const data = row.data as BoardData;
     if (Array.isArray(data?.nodes)) {
-      const { out, changed } = linkTemplateNodes(data.nodes, await positionIdsBySlug());
-      if (changed) {
+      const linked = linkTemplateNodes(data.nodes, await positionIdsBySlug());
+      const core = addCoreTeam({ nodes: linked.out, edges: data.edges });
+      if (linked.changed || core.changed) {
         const [updated] = await db.update(machineBoards)
-          .set({ data: { ...data, nodes: out }, updatedAt: new Date() })
+          .set({ data: core.data, updatedAt: new Date() })
           .where(eq(machineBoards.id, row.id))
           .returning();
         return updated;

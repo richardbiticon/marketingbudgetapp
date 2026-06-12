@@ -46,7 +46,7 @@ export default function GuidelinePage() {
 
   return (
     <main>
-      <RebuildShell eyebrow="MMC REBUILD" title="The Guideline"
+      <RebuildShell eyebrow="THE REBUILD" title="The Guideline"
         updated={doc ? { at: doc.updatedAt, by: doc.updatedBy } : null}
         actions={
           editing ? (

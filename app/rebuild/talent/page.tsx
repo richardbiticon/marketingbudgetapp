@@ -46,7 +46,7 @@ export default function TalentPool() {
 
   return (
     <main>
-      <RebuildShell eyebrow="MMC REBUILD" title="Talent Pool"
+      <RebuildShell eyebrow="THE REBUILD" title="Talent Pool"
         updated={candidates[0] ? { at: candidates[0].updatedAt, by: candidates[0].updatedBy } : null}
         actions={<Button size="sm" onClick={() => setIntakeOpen(true)}><Plus className="h-4 w-4" /> Add Talent</Button>}>
 

@@ -128,7 +128,7 @@ export default function BuilderPage() {
 
   return (
     <main>
-      <RebuildShell eyebrow="MMC REBUILD" title="Opportunity Builder"
+      <RebuildShell eyebrow="THE REBUILD" title="Opportunity Builder"
         updated={sel ? { at: sel.updatedAt, by: sel.updatedBy } : null}
         actions={<Button size="sm" onClick={createDraft}><Plus className="h-4 w-4" /> New draft</Button>}>
 

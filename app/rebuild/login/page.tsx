@@ -34,9 +34,10 @@ export default function RebuildLogin() {
         className="w-full max-w-sm rounded-2xl border border-line2 bg-ink-panel p-8 shadow-[0_40px_120px_rgba(0,0,0,.45)]">
         <div className="flex items-center gap-3">
           <Image src="/logo.png" alt="All Volleyball" width={40} height={40} className="rounded-lg" />
-          <Eyebrow>/ HIDDEN</Eyebrow>
+          <Eyebrow>/ THE REBUILD</Eyebrow>
         </div>
-        <h1 className="mt-4 text-xl font-bold tracking-tight text-cream-light">Locked.</h1>
+        <h1 className="mt-4 text-xl font-bold tracking-tight text-cream-light">The Rebuild.</h1>
+        <p className="mt-1 text-sm text-dim">Rebuilding the marketing team around the core. Password gets you in.</p>
         <form onSubmit={submit} className="mt-5 space-y-3">
           <Input type="password" autoFocus value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" aria-label="Password" />
           {err ? <p className="text-sm text-red">{err}</p> : null}

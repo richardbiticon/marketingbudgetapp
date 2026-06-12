@@ -52,7 +52,7 @@ export default function TalentProfile() {
   }
 
   if (!c) {
-    return <main><RebuildShell eyebrow="MMC REBUILD" title="Loading." backHref="/rebuild/talent" backLabel="Talent"><p className="text-sm text-dim">Pulling the profile.</p></RebuildShell></main>;
+    return <main><RebuildShell eyebrow="THE REBUILD" title="Loading." backHref="/rebuild/talent" backLabel="Talent"><p className="text-sm text-dim">Pulling the profile.</p></RebuildShell></main>;
   }
   const p = c.profile ?? {};
 

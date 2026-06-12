@@ -35,7 +35,27 @@ export default function RebuildHome() {
 
   return (
     <main>
-      <RebuildShell eyebrow="MMC REBUILD" title="The planning room" backHref="/" backLabel="OS">
+      <RebuildShell eyebrow="THE REBUILD" title="Rebuilding the team" backHref="/" backLabel="OS">
+        <div className="mb-6 max-w-3xl">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-dim">/ The core, already in place</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[
+              { name: "Andrew", role: "Head of E-com & Marketing" },
+              { name: "Richard", role: "Digital Marketing Manager" },
+              { name: "Jericho", role: "Web & Shop Expert" },
+            ].map((p) => (
+              <div key={p.name} className="flex items-center gap-3 rounded-2xl border border-line bg-ink-panel p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#57c47b]/15 font-bold text-[#57c47b]">
+                  {p.name[0]}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-cream-light">{p.name}</span>
+                  <span className="block truncate font-mono text-[9px] uppercase tracking-wider text-dim">{p.role}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
           {CARDS.map((c, i) => {
             const badge = c.badgeKey === "open" ? openCount : c.badgeKey === "talent" ? talentCount : 0;
@@ -69,8 +89,10 @@ export default function RebuildHome() {
           })}
         </div>
         <p className="mt-6 max-w-xl text-sm text-dim">
-          Five hires, a monthly recruiting engine, and a visual talent pool. Design the role in the
+          The core is set: Andrew runs e-commerce and marketing, Richard runs digital marketing,
+          Jericho runs the web store. The Rebuild adds the team around them. Design each role in the
           Builder, push it through, track applicants on the position, and keep the bench warm.
+          Roles also live as humans on The Machine board.
         </p>
       </RebuildShell>
     </main>
