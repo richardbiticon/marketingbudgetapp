@@ -6,10 +6,17 @@
 const COOKIE = "mmc_session";
 const THIRTY_DAYS_S = 30 * 24 * 60 * 60;
 
+// The gate password. REBUILD_PASSWORD in the environment overrides the
+// default, so rotating it is an env change with no deploy. Server side only;
+// this module is never bundled for the client.
+export function getRebuildPassword(): string {
+  return process.env.REBUILD_PASSWORD || "mmcrebuild";
+}
+
 function secret(): string {
   // Derive the signing secret from the password itself. Acceptable for a thin
   // gate; a dedicated secret comes with real auth.
-  return "mmc:" + (process.env.REBUILD_PASSWORD ?? "");
+  return "mmc:" + getRebuildPassword();
 }
 
 async function hmac(payload: string): Promise<string> {
@@ -28,7 +35,7 @@ export async function makeToken(): Promise<string> {
 }
 
 export async function verifyToken(token: string | undefined): Promise<boolean> {
-  if (!token || !process.env.REBUILD_PASSWORD) return false;
+  if (!token) return false;
   const [exp, sig] = token.split(".");
   if (!exp || !sig) return false;
   if (Number(exp) < Date.now()) return false;
